@@ -173,9 +173,13 @@ export default function FilesPage() {
 
       {status && <p className="status">{status}</p>}
 
-      <section className="card">
-        <h3>Upload</h3>
-        <input type="file" onChange={handleUpload} />
+      <section className="card action-card minimal">
+        <div className="action-head">
+          <h3>Upload de arquivo</h3>
+        </div>
+        <div className="upload-inline">
+          <input className="file-input-minimal" type="file" onChange={handleUpload} />
+        </div>
       </section>
 
       <section className="grid">

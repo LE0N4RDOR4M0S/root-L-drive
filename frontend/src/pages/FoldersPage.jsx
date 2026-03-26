@@ -109,16 +109,20 @@ export default function FoldersPage() {
 
       {status && <p className="status">{status}</p>}
 
-      <section className="card">
-        <h3>Criar nova pasta</h3>
-        <form className="inline-form" onSubmit={handleCreateFolder}>
+      <section className="card action-card minimal">
+        <div className="action-head">
+          <h3>Nova pasta</h3>
+        </div>
+        <form className="inline-form compact" onSubmit={handleCreateFolder}>
           <input
             value={newFolderName}
             onChange={(event) => setNewFolderName(event.target.value)}
             placeholder="Nome da pasta"
             required
           />
-          <button type="submit">Criar</button>
+          <button type="submit" className="primary-compact">
+            Criar
+          </button>
         </form>
       </section>
 

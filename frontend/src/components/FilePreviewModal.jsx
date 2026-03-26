@@ -67,7 +67,7 @@ export default function FilePreviewModal({ open, file, previewUrl, onClose, onDo
       >
         <header className="preview-header">
           <div>
-            <h3>Preview do arquivo</h3>
+            <h3>Preview</h3>
             <p className="muted">{file.name}</p>
           </div>
           <div className="row-actions">

@@ -268,6 +268,63 @@ body {
   gap: 0.8rem;
 }
 
+.inline-form.compact {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.action-card.minimal {
+  box-shadow: none;
+  border: 1px solid #dfe8f6;
+  background: #fbfdff;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.action-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.action-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.action-head .muted {
+  font-size: 0.85rem;
+}
+
+.primary-compact {
+  min-width: 96px;
+  padding: 0.55rem 0.75rem;
+}
+
+.upload-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-input-minimal {
+  width: 100%;
+  border-style: dashed;
+  border-color: #c9d8ee;
+  background: #ffffff;
+}
+
+.file-input-minimal::file-selector-button {
+  border: 1px solid #c9d8ee;
+  background: #f3f8ff;
+  color: #1b427f;
+  border-radius: 7px;
+  padding: 0.4rem 0.65rem;
+  margin-right: 0.65rem;
+}
+
 label {
   display: grid;
   gap: 0.35rem;
@@ -537,6 +594,15 @@ button.danger {
   .page,
   .app-shell {
     padding: 0.75rem;
+  }
+
+  .action-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inline-form.compact {
+    grid-template-columns: 1fr;
   }
 
   .folders-grid {
