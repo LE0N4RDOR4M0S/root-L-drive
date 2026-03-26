@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: private-driver-mongo-dev
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: private_driver
+    volumes:
+      - mongo_data_dev:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: private-driver-minio-dev
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_dev:/data
+    healthcheck:
+      test: curl -f http://localhost:9000/minio/health/live
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data_dev:
+  minio_data_dev:
