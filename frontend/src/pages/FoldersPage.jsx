@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
@@ -20,6 +21,7 @@ async function buildFolderTree(parentId = null, path = []) {
 }
 
 export default function FoldersPage() {
+  const [searchParams] = useSearchParams();
   const {
     currentFolderId,
     currentFolders,
@@ -37,6 +39,17 @@ export default function FoldersPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [treeNodes, setTreeNodes] = useState([]);
   const [treeLoading, setTreeLoading] = useState(false);
+
+  const searchTerm = useMemo(() => {
+    return (searchParams.get("search") || "").trim().toLowerCase();
+  }, [searchParams]);
+
+  const visibleFolders = useMemo(() => {
+    if (!searchTerm) {
+      return currentFolders;
+    }
+    return currentFolders.filter((folder) => folder.name.toLowerCase().includes(searchTerm));
+  }, [currentFolders, searchTerm]);
 
   const loadTree = async () => {
     setTreeLoading(true);
@@ -143,8 +156,10 @@ export default function FoldersPage() {
         <article className="card">
           <h3>Pastas do nivel selecionado</h3>
           <ul className="list">
-            {currentFolders.length === 0 && <li>Nenhuma pasta neste nivel.</li>}
-            {currentFolders.map((folder) => (
+            {visibleFolders.length === 0 && (
+              <li>{searchTerm ? "Nenhuma pasta encontrada para a busca." : "Nenhuma pasta neste nivel."}</li>
+            )}
+            {visibleFolders.map((folder) => (
               <li key={folder.id}>
                 <button className="link" onClick={() => openFolder(folder)}>
                   {folder.name}

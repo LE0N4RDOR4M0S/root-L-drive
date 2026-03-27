@@ -4,6 +4,7 @@ from app.core.dependencies import get_current_user
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_folder_repository import MongoFolderRepository
+from app.repositories.mongo_notification_repository import MongoNotificationRepository
 from app.schemas.folder import CreateFolderRequest, FolderResponse
 from app.services.folder_service import FolderService
 
@@ -15,7 +16,8 @@ def get_folder_service() -> FolderService:
     db = get_database()
     folder_repo = MongoFolderRepository(db)
     file_repo = MongoFileRepository(db)
-    return FolderService(folder_repo=folder_repo, file_repo=file_repo)
+    notification_repo = MongoNotificationRepository(db)
+    return FolderService(folder_repo=folder_repo, file_repo=file_repo, notification_repo=notification_repo)
 
 
 @router.post("", response_model=FolderResponse, status_code=status.HTTP_201_CREATED)

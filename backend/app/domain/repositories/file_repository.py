@@ -21,6 +21,10 @@ class FileRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def search_by_name(self, owner_id: str, query: str, limit: int = 30) -> list[FileEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_by_id(self, file_id: str, owner_id: str) -> FileEntity | None:
         raise NotImplementedError
 

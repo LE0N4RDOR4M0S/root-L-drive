@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
@@ -15,6 +16,7 @@ import {
 import useFolderNavigator from "../hooks/useFolderNavigator";
 
 export default function FilesPage() {
+  const [searchParams] = useSearchParams();
   const {
     currentFolderId,
     currentFolders,
@@ -31,6 +33,18 @@ export default function FilesPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+
+  const searchTerm = useMemo(() => {
+    return (searchParams.get("search") || "").trim().toLowerCase();
+  }, [searchParams]);
+
+  const visibleFiles = useMemo(() => {
+    if (!searchTerm) {
+      return files;
+    }
+
+    return files.filter((file) => file.name.toLowerCase().includes(searchTerm));
+  }, [files, searchTerm]);
 
   const loadCurrentFiles = async (folderId = currentFolderId) => {
     const data = await listFiles(folderId);
@@ -200,8 +214,10 @@ export default function FilesPage() {
         <article className="card">
           <h3>Arquivos</h3>
           <ul className="list">
-            {files.length === 0 && <li>Nenhum arquivo neste nivel.</li>}
-            {files.map((file) => (
+            {visibleFiles.length === 0 && (
+              <li>{searchTerm ? "Nenhum arquivo encontrado para a busca." : "Nenhum arquivo neste nivel."}</li>
+            )}
+            {visibleFiles.map((file) => (
               <li key={file.id}>
                 <span>
                   {file.name} ({Math.ceil(file.size / 1024)} KB)

@@ -1,9 +1,10 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { clearAuth } from "../api/client";
+import AppHeader from "../components/AppHeader";
 
 const menuItems = [
-  { to: "/", label: "Visao Geral", end: true },
+  { to: "/", label: "Visão Geral", end: true },
   { to: "/folders", label: "Pastas" },
   { to: "/files", label: "Arquivos" },
 ];
@@ -25,6 +26,7 @@ export default function AppLayout() {
         </div>
 
         <nav className="menu">
+          <span className="menu-title">Navegacao</span>
           {menuItems.map((item) => (
             <NavLink
               key={item.to}
@@ -37,18 +39,15 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <button className="ghost logout-btn" onClick={handleLogout}>
-          Sair
-        </button>
+        <div className="sidebar-footer">
+          <button className="ghost logout-btn" onClick={handleLogout}>
+            Sair
+          </button>
+        </div>
       </aside>
 
       <main className="content-area">
-        <header className="topbar card">
-          <div>
-            <h2>Painel Operacional</h2>
-          </div>
-          <span className="topbar-badge">Ambiente Pessoal</span>
-        </header>
+        <AppHeader />
         <Outlet />
       </main>
     </div>

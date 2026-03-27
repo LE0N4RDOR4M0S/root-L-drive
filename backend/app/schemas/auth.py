@@ -21,4 +21,11 @@ class AuthResponse(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: EmailStr
+    full_name: str | None = None
+    role: str | None = None
+    department: str | None = None
+    phone: str | None = None
+    avatar_url: str | None = None
+    updated_at: datetime | None = None
+    last_login_at: datetime | None = None
     created_at: datetime

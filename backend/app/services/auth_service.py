@@ -28,4 +28,6 @@ class AuthService:
                 detail="Invalid email or password",
             )
 
+        await self.user_repository.update_last_login(user.id)
+
         return create_access_token(subject=user.id)

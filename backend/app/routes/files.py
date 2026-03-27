@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_folder_repository import MongoFolderRepository
+from app.repositories.mongo_notification_repository import MongoNotificationRepository
 from app.schemas.file import (
     CompleteUploadRequest,
     FileResponse,
@@ -27,6 +28,7 @@ def get_file_service() -> FileService:
     return FileService(
         file_repo=MongoFileRepository(db),
         folder_repo=MongoFolderRepository(db),
+        notification_repo=MongoNotificationRepository(db),
         minio_service=MinioService(),
     )
 

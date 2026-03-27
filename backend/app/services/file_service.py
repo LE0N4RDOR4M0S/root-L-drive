@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from app.domain.entities.file import FileEntity
 from app.domain.repositories.file_repository import FileRepository
 from app.domain.repositories.folder_repository import FolderRepository
+from app.domain.repositories.notification_repository import NotificationRepository
 from app.services.minio_service import MinioService
 
 
@@ -14,10 +15,12 @@ class FileService:
         self,
         file_repo: FileRepository,
         folder_repo: FolderRepository,
+        notification_repo: NotificationRepository,
         minio_service: MinioService,
     ) -> None:
         self.file_repo = file_repo
         self.folder_repo = folder_repo
+        self.notification_repo = notification_repo
         self.minio_service = minio_service
 
     async def request_upload_url(
@@ -62,7 +65,7 @@ class FileService:
                 detail="Invalid object key",
             )
 
-        return await self.file_repo.create(
+        file_item = await self.file_repo.create(
             name=name,
             owner_id=owner_id,
             folder_id=folder_id,
@@ -70,6 +73,15 @@ class FileService:
             size=size,
             mime_type=mime_type,
         )
+        await self.notification_repo.create(
+            owner_id=owner_id,
+            title="Arquivo enviado",
+            message=f"O arquivo '{file_item.name}' foi enviado com sucesso.",
+            category="file",
+            entity_type="file",
+            entity_id=file_item.id,
+        )
+        return file_item
 
     async def list_files(self, owner_id: str, folder_id: str | None) -> list[FileEntity]:
         if folder_id:
@@ -111,3 +123,12 @@ class FileService:
         deleted = await self.file_repo.delete(file_id=file_id, owner_id=owner_id)
         if not deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+        await self.notification_repo.create(
+            owner_id=owner_id,
+            title="Arquivo removido",
+            message=f"O arquivo '{file_item.name}' foi removido.",
+            category="file",
+            entity_type="file",
+            entity_id=file_item.id,
+        )

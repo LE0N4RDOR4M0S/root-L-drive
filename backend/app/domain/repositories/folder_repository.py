@@ -13,6 +13,10 @@ class FolderRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def search_by_name(self, owner_id: str, query: str, limit: int = 30) -> list[Folder]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_by_id(self, folder_id: str, owner_id: str) -> Folder | None:
         raise NotImplementedError
 

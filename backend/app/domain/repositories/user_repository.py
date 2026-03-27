@@ -15,3 +15,11 @@ class UserRepository(ABC):
     @abstractmethod
     async def get_by_id(self, user_id: str) -> User | None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def update_last_login(self, user_id: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_profile(self, user_id: str, updates: dict) -> User | None:
+        raise NotImplementedError

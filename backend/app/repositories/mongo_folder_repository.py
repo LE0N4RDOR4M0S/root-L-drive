@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import re
 
 from app.db.id_utils import as_object_id, is_valid_object_id
 from app.domain.entities.folder import Folder
@@ -31,6 +32,20 @@ class MongoFolderRepository(FolderRepository):
 
         cursor = self.collection.find(filter_doc).sort("created_at", -1)
         docs = await cursor.to_list(length=1000)
+        return [folder_from_mongo(doc) for doc in docs]
+
+    async def search_by_name(self, owner_id: str, query: str, limit: int = 30) -> list[Folder]:
+        safe_limit = max(1, min(limit, 100))
+        escaped_query = re.escape(query.strip())
+        if not escaped_query:
+            return []
+
+        cursor = (
+            self.collection.find({"owner_id": owner_id, "name": {"$regex": escaped_query, "$options": "i"}})
+            .sort("created_at", -1)
+            .limit(safe_limit)
+        )
+        docs = await cursor.to_list(length=safe_limit)
         return [folder_from_mongo(doc) for doc in docs]
 
     async def get_by_id(self, folder_id: str, owner_id: str) -> Folder | None:
