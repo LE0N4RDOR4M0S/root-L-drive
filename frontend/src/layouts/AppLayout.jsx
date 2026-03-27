@@ -1,12 +1,12 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-
+import { BsDeviceHddFill, BsFillFolderFill, BsFileEarmarkFill } from "react-icons/bs";
 import { clearAuth } from "../api/client";
 import AppHeader from "../components/AppHeader";
 
 const menuItems = [
-  { to: "/", label: "Visão Geral", end: true },
-  { to: "/folders", label: "Pastas" },
-  { to: "/files", label: "Arquivos" },
+  { to: "/", label: "Visão Geral", end: true, icon: BsDeviceHddFill },
+  { to: "/folders", label: "Pastas", icon: BsFillFolderFill },
+  { to: "/files", label: "Arquivos", icon: BsFileEarmarkFill },
 ];
 
 export default function AppLayout() {
@@ -26,16 +26,22 @@ export default function AppLayout() {
         </div>
 
         <nav className="menu">
-          <span className="menu-title">Navegacao</span>
+          <span className="menu-title">Navegação</span>
           {menuItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
-            >
-              {item.label}
-            </NavLink>
+            (() => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) => `menu-link ${isActive ? "active" : ""}`}
+                >
+                  <Icon className="menu-link-icon" aria-hidden="true" />
+                  {item.label}
+                </NavLink>
+              );
+            })()
           ))}
         </nav>
 
