@@ -1,14 +1,14 @@
 # Root L Drive MVP
 
-Self-hosted cloud storage MVP (Google Drive-like) with clean modular architecture.
+MVP de armazenamento em nuvem autohospedado com arquitetura modular e limpa.
 
 ## Stack
 
 - Frontend: React + Vite
 - Backend: FastAPI (async)
 - Database: MongoDB (Motor)
-- Object Storage: MinIO (S3 compatible)
-- Containerization: Docker + Docker Compose
+- Storage: MinIO (S3 compatible)
+- Containerização: Docker + Docker Compose
 
 ## Run
 
@@ -27,17 +27,17 @@ Services:
 
 ```text
 backend/app
-  core/           # config, security, auth dependencies
-  db/             # db clients and id helpers
-  domain/         # pure domain entities + repository contracts
-  repositories/   # infrastructure adapters (MongoDB)
-  services/       # application use-cases/business logic
-  schemas/        # HTTP contract DTOs
-  routes/         # API controllers
+  core/           # configurações, segurança, autenticação e dependências
+  db/             # clientes de banco de dados e helpers de ID
+  domain/         # Entidades puras + contratos de repositórios
+  repositories/   # Adapters de infraestrutura (MongoDB)
+  services/       # use-cases e lógica de negócios
+  schemas/        # DTO e contratos http
+  routes/         # API controller
   main.py         # app bootstrap
 ```
 
-## API Overview
+## Visão geral da API
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
@@ -47,16 +47,27 @@ backend/app
 - `POST /api/v1/files/upload-url` (auth)
 - `POST /api/v1/files/complete` (auth)
 - `GET /api/v1/files` (auth)
+- `GET /api/v1/files/{file_id}/download-url` (auth)
+- `GET /api/v1/files/{file_id}/download` (auth)
 - `DELETE /api/v1/files/{file_id}` (auth)
+- `GET /api/v1/notifications` (auth)
+- `PATCH /api/v1/notifications/{notification_id}/read` (auth)
+- `PATCH /api/v1/notifications/read-all` (auth)
+- `DELETE /api/v1/notifications/{notification_id}` (auth)
+- `DELETE /api/v1/notifications` (auth)
+- `GET /api/v1/profile/me` (auth)
+- `PATCH /api/v1/profile/me` (auth)
+- `POST /api/v1/profile/avatar/upload` (auth)
+- `GET /api/v1/search` (auth)
 
-## Upload Flow
+## Fluxo de upload
 
-1. Frontend requests presigned URL from backend
-2. Frontend uploads binary directly to MinIO
-3. Frontend calls backend to persist file metadata in MongoDB
+1. Requisição presigned URL do backend
+2. Upload binário diretamente para MinIO
+3. O frontend chama o backend para persistir os metadados do arquivo no MongoDB
 
 ## Notes
 
-- Folder deletion is blocked when folder is not empty
-- Ownership is validated for files/folders by `owner_id`
-- Object key format: `{user_id}/{folder_id|root}/{uuid}-{filename}`
+- A exclusão de pastas é bloqueada quando a pasta não está vazia.
+- A propriedade de arquivos/pastas é validada pelo `owner_id`.
+- Formato da chave do objeto no MinIO: `{user_id}/{folder_id|root}/{uuid}-{filename}`
