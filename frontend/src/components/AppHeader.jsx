@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
+  deleteAllNotifications,
+  deleteNotification,
   getMyProfile,
   listNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
   searchWorkspace,
 } from "../api/header";
+import ProfileEditModal from "./ProfileEditModal";
 
 const pathLabels = {
   "/": "Visão Geral",
@@ -27,6 +30,7 @@ export default function AppHeader() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [profile, setProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   const activeLabel = useMemo(() => {
     return pathLabels[location.pathname] ?? "Painel";
@@ -101,6 +105,28 @@ export default function AppHeader() {
     try {
       await markAllNotificationsAsRead();
       setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+      setUnreadCount(0);
+    } catch {
+      // noop
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      await deleteNotification(notificationId);
+      setNotifications((current) => current.filter((item) => item.id !== notificationId));
+    } catch {
+      // noop
+    }
+  };
+
+  const handleDeleteAllNotifications = async () => {
+    if (!confirm("Tem certeza que deseja deletar todas as notificações?")) {
+      return;
+    }
+    try {
+      await deleteAllNotifications();
+      setNotifications([]);
       setUnreadCount(0);
     } catch {
       // noop
@@ -208,9 +234,18 @@ export default function AppHeader() {
             <div className="notif-dropdown" role="dialog" aria-label="Notificações">
               <div className="notif-head">
                 <strong>Notificações</strong>
-                <button type="button" className="link-btn" onClick={handleReadAll}>
-                  Marcar todas
-                </button>
+                <div className="notif-head-actions">
+                  {notifications.length > 0 && unreadCount > 0 && (
+                    <button type="button" className="link-btn" onClick={handleReadAll}>
+                      Marcar todas
+                    </button>
+                  )}
+                  {notifications.length > 0 && (
+                    <button type="button" className="link-btn delete-all-btn" onClick={handleDeleteAllNotifications}>
+                      Limpar tudo
+                    </button>
+                  )}
+                </div>
               </div>
               <ul>
                 {notifications.length === 0 ? <li>Nenhuma notificação no momento.</li> : null}
@@ -219,6 +254,15 @@ export default function AppHeader() {
                     <button type="button" className="notif-item" onClick={() => handleNotificationRead(item.id)}>
                       <strong>{item.title}</strong>
                       <span>{item.message}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="notif-delete-btn"
+                      onClick={() => handleDeleteNotification(item.id)}
+                      aria-label="Deletar notificação"
+                      title="Deletar"
+                    >
+                      ✕
                     </button>
                   </li>
                 ))}
@@ -245,28 +289,58 @@ export default function AppHeader() {
 
         {isProfileOpen ? (
           <div className="profile-dropdown" role="dialog" aria-label="Meu perfil">
-            <h4>{fallbackProfileName}</h4>
-            <p>{profile?.email || "-"}</p>
-            <ul>
-              <li>
-                <strong>Setor:</strong> {profile?.department || "Nao informado"}
-              </li>
-              <li>
-                <strong>Funcao:</strong> {profile?.role || "Nao informado"}
-              </li>
-              <li>
-                <strong>Telefone:</strong> {profile?.phone || "Nao informado"}
-              </li>
-              <li>
-                <strong>Ultimo acesso:</strong> {lastLoginText}
-              </li>
-              <li>
-                <strong>Membro desde:</strong> {profileSinceText}
-              </li>
-              <li>
-                <strong>Contexto atual:</strong> {activeLabel}
-              </li>
-            </ul>
+            {showProfileEdit ? (
+              <ProfileEditModal
+                profile={profile}
+                onClose={() => setShowProfileEdit(false)}
+                onProfileUpdate={(updated) => {
+                  setProfile(updated);
+                  setShowProfileEdit(false);
+                }}
+              />
+            ) : (
+              <>
+                <div className="profile-view-header">
+                  <h4>{profile?.full_name || profile?.email || "Meu Perfil"}</h4>
+                  <button
+                    type="button"
+                    className="link-btn edit-profile-btn"
+                    onClick={() => setShowProfileEdit(true)}
+                  >
+                    Editar
+                  </button>
+                </div>
+                <p>{profile?.email || "-"}</p>
+                <ul>
+                  {profile?.role && (
+                    <li>
+                      <strong>Funcao:</strong> {profile.role}
+                    </li>
+                  )}
+                  {profile?.department && (
+                    <li>
+                      <strong>Setor:</strong> {profile.department}
+                    </li>
+                  )}
+                  {profile?.phone && (
+                    <li>
+                      <strong>Telefone:</strong> {profile.phone}
+                    </li>
+                  )}
+                  <li>
+                    <strong>Ultimo acesso:</strong>{" "}
+                    {profile?.last_login_at ? new Date(profile.last_login_at).toLocaleString("pt-BR") : "Sem acesso recente"}
+                  </li>
+                  <li>
+                    <strong>Membro desde:</strong>{" "}
+                    {profile?.created_at ? new Date(profile.created_at).toLocaleDateString("pt-BR") : "-"}
+                  </li>
+                  <li>
+                    <strong>Contexto atual:</strong> {activeLabel}
+                  </li>
+                </ul>
+              </>
+            )}
           </div>
         ) : null}
       </div>

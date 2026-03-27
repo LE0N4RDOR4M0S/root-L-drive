@@ -46,3 +46,19 @@ class MinioService:
     async def get_object_stream(self, object_key: str):
         await self.ensure_bucket_exists()
         return self.client.get_object(self.bucket_name, object_key)
+
+    async def upload_file(self, object_key: str, file_data: bytes, content_type: str = "application/octet-stream") -> str:
+        """Upload file directly and return object key"""
+        await self.ensure_bucket_exists()
+        try:
+            self.client.put_object(
+                self.bucket_name,
+                object_key,
+                data=file_data,
+                length=len(file_data),
+                content_type=content_type,
+            )
+            # Return presigned download URL
+            return await self.generate_download_url(object_key, expires_seconds=31536000)  # 1 year
+        except S3Error as e:
+            raise Exception(f"Erro ao fazer upload do arquivo: {str(e)}")

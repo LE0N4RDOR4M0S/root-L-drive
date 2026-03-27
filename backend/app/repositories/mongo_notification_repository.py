@@ -59,3 +59,16 @@ class MongoNotificationRepository(NotificationRepository):
             {"$set": {"is_read": True}},
         )
         return result.modified_count
+
+    async def delete(self, notification_id: str, owner_id: str) -> bool:
+        if not is_valid_object_id(notification_id):
+            return False
+
+        result = await self.collection.delete_one(
+            {"_id": as_object_id(notification_id), "owner_id": owner_id}
+        )
+        return result.deleted_count > 0
+
+    async def delete_all(self, owner_id: str) -> int:
+        result = await self.collection.delete_many({"owner_id": owner_id})
+        return result.deleted_count

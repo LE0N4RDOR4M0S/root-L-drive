@@ -63,3 +63,17 @@ async def mark_all_notifications_as_read(current_user=Depends(get_current_user))
     service = get_notification_service()
     updated_count = await service.mark_all_as_read(owner_id=current_user.id)
     return {"updated_count": updated_count}
+
+
+@router.delete("/{notification_id}")
+async def delete_notification(notification_id: str, current_user=Depends(get_current_user)):
+    service = get_notification_service()
+    await service.delete_notification(owner_id=current_user.id, notification_id=notification_id)
+    return {"deleted": True}
+
+
+@router.delete("")
+async def delete_all_notifications(current_user=Depends(get_current_user)):
+    service = get_notification_service()
+    deleted_count = await service.delete_all_notifications(owner_id=current_user.id)
+    return {"deleted_count": deleted_count}

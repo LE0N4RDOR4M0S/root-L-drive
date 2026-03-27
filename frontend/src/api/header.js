@@ -33,3 +33,24 @@ export async function updateMyProfile(payload) {
   const { data } = await apiClient.patch("/profile/me", payload);
   return data;
 }
+
+export async function deleteNotification(notificationId) {
+  const { data } = await apiClient.delete(`/notifications/${notificationId}`);
+  return data;
+}
+
+export async function deleteAllNotifications() {
+  const { data } = await apiClient.delete("/notifications");
+  return data;
+}
+
+export async function uploadAvatar(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post("/profile/avatar/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return data;
+}

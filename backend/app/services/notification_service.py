@@ -39,3 +39,12 @@ class NotificationService:
 
     async def mark_all_as_read(self, owner_id: str) -> int:
         return await self.notification_repo.mark_all_as_read(owner_id=owner_id)
+
+    async def delete_notification(self, owner_id: str, notification_id: str) -> bool:
+        deleted = await self.notification_repo.delete(notification_id=notification_id, owner_id=owner_id)
+        if not deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
+        return deleted
+
+    async def delete_all_notifications(self, owner_id: str) -> int:
+        return await self.notification_repo.delete_all(owner_id=owner_id)
