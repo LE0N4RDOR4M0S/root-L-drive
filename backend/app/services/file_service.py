@@ -119,15 +119,14 @@ class FileService:
         if file_item is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
-        await self.minio_service.delete_object(file_item.minio_key)
         deleted = await self.file_repo.delete(file_id=file_id, owner_id=owner_id)
         if not deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
         await self.notification_repo.create(
             owner_id=owner_id,
-            title="Arquivo removido",
-            message=f"O arquivo '{file_item.name}' foi removido.",
+            title="Arquivo na lixeira",
+            message=f"O arquivo '{file_item.name}' foi enviado para a lixeira.",
             category="file",
             entity_type="file",
             entity_id=file_item.id,

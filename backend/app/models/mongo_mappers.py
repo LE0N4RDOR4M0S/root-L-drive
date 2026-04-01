@@ -40,6 +40,7 @@ def file_from_mongo(doc: dict) -> FileEntity:
         size=doc["size"],
         mime_type=doc["mime_type"],
         created_at=doc["created_at"],
+        deleted_at=doc.get("deleted_at"),
     )
 
 

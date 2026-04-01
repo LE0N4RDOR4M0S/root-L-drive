@@ -12,3 +12,4 @@ class FileEntity:
     size: int
     mime_type: str
     created_at: datetime
+    deleted_at: datetime | None

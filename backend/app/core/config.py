@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     minio_secure: bool = False
     minio_bucket_name: str = "private-drive"
 
+    trash_retention_days: int = 30
+    trash_cleanup_interval_seconds: int = 3600
+
     cors_allow_origins: str = "http://localhost:5173,http://localhost:3000"
 
     model_config = SettingsConfigDict(env_file_encoding="utf-8")

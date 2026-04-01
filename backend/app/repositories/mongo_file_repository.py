@@ -29,13 +29,14 @@ class MongoFileRepository(FileRepository):
             "size": size,
             "mime_type": mime_type,
             "created_at": now,
+            "deleted_at": None,
         }
         result = await self.collection.insert_one(doc)
         doc["_id"] = result.inserted_id
         return file_from_mongo(doc)
 
     async def list_by_owner(self, owner_id: str, folder_id: str | None = None) -> list[FileEntity]:
-        filter_doc = {"owner_id": owner_id}
+        filter_doc = {"owner_id": owner_id, "deleted_at": None}
         if folder_id is None:
             filter_doc["folder_id"] = None
         else:
@@ -52,7 +53,13 @@ class MongoFileRepository(FileRepository):
             return []
 
         cursor = (
-            self.collection.find({"owner_id": owner_id, "name": {"$regex": escaped_query, "$options": "i"}})
+            self.collection.find(
+                {
+                    "owner_id": owner_id,
+                    "deleted_at": None,
+                    "name": {"$regex": escaped_query, "$options": "i"},
+                }
+            )
             .sort("created_at", -1)
             .limit(safe_limit)
         )
@@ -62,14 +69,33 @@ class MongoFileRepository(FileRepository):
     async def get_by_id(self, file_id: str, owner_id: str) -> FileEntity | None:
         if not is_valid_object_id(file_id):
             return None
-        doc = await self.collection.find_one({"_id": as_object_id(file_id), "owner_id": owner_id})
+        doc = await self.collection.find_one({"_id": as_object_id(file_id), "owner_id": owner_id, "deleted_at": None})
         return file_from_mongo(doc) if doc else None
 
     async def count_by_folder(self, folder_id: str, owner_id: str) -> int:
-        return await self.collection.count_documents({"folder_id": folder_id, "owner_id": owner_id})
+        return await self.collection.count_documents({"folder_id": folder_id, "owner_id": owner_id, "deleted_at": None})
 
     async def delete(self, file_id: str, owner_id: str) -> bool:
         if not is_valid_object_id(file_id):
             return False
-        result = await self.collection.delete_one({"_id": as_object_id(file_id), "owner_id": owner_id})
+        result = await self.collection.update_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id, "deleted_at": None},
+            {"$set": {"deleted_at": datetime.now(timezone.utc)}},
+        )
+        return result.modified_count == 1
+
+    async def list_deleted_before(self, cutoff: datetime, limit: int = 200) -> list[FileEntity]:
+        safe_limit = max(1, min(limit, 1000))
+        cursor = (
+            self.collection.find({"deleted_at": {"$ne": None, "$lte": cutoff}})
+            .sort("deleted_at", 1)
+            .limit(safe_limit)
+        )
+        docs = await cursor.to_list(length=safe_limit)
+        return [file_from_mongo(doc) for doc in docs]
+
+    async def hard_delete_by_id(self, file_id: str) -> bool:
+        if not is_valid_object_id(file_id):
+            return False
+        result = await self.collection.delete_one({"_id": as_object_id(file_id)})
         return result.deleted_count == 1

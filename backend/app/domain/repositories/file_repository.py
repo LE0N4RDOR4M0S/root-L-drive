@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from app.domain.entities.file import FileEntity
 
@@ -34,4 +35,12 @@ class FileRepository(ABC):
 
     @abstractmethod
     async def delete(self, file_id: str, owner_id: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_deleted_before(self, cutoff: datetime, limit: int = 200) -> list[FileEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def hard_delete_by_id(self, file_id: str) -> bool:
         raise NotImplementedError
