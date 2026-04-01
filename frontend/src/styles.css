@@ -751,6 +751,14 @@ body {
   transition: width 120ms linear;
 }
 
+.share-link-result {
+  margin-top: 0.8rem;
+  border: 1px solid #d7e4f8;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 0.7rem;
+}
+
 .file-input-minimal {
   width: 100%;
   border-style: dashed;

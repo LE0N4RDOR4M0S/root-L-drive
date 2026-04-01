@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     trash_cleanup_interval_seconds: int = 3600
 
     cors_allow_origins: str = "http://localhost:5173,http://localhost:3000"
+    frontend_public_url: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(env_file_encoding="utf-8")
     

@@ -7,6 +7,7 @@ import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
 import FilePreviewModal from "../components/FilePreviewModal";
 import {
   completeUpload,
+  createFileShareLink,
   deleteFile,
   downloadFile,
   hardDeleteFile,
@@ -17,6 +18,7 @@ import {
   restoreFile,
   uploadToPresignedUrl,
 } from "../api/files";
+import { getApiErrorMessage } from "../api/client";
 import useFolderNavigator from "../hooks/useFolderNavigator";
 
 export default function FilesPage() {
@@ -41,6 +43,11 @@ export default function FilesPage() {
   const [activeView, setActiveView] = useState("active");
   const [previewFile, setPreviewFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [shareTarget, setShareTarget] = useState(null);
+  const [sharePassword, setSharePassword] = useState("");
+  const [shareExpiresInDays, setShareExpiresInDays] = useState("");
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareResult, setShareResult] = useState(null);
   const [uploadState, setUploadState] = useState({
     inProgress: false,
     filename: "",
@@ -143,7 +150,7 @@ export default function FilesPage() {
       await loadCurrentFiles(currentFolderId);
       await loadCurrentFolders(currentFolderId);
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Falha no upload.");
+      setStatus(getApiErrorMessage(err, "Falha no upload."));
       setUploadState({ inProgress: false, filename: "", progress: 0 });
     } finally {
       setTimeout(() => {
@@ -183,7 +190,7 @@ export default function FilesPage() {
       await loadCurrentFiles(currentFolderId);
       await loadTrashFiles();
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Nao foi possivel mover o arquivo para a lixeira.");
+      setStatus(getApiErrorMessage(err, "Nao foi possivel mover o arquivo para a lixeira."));
     } finally {
       setConfirmLoading(false);
     }
@@ -200,7 +207,7 @@ export default function FilesPage() {
       await loadCurrentFiles(currentFolderId);
       await loadTrashFiles();
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Nao foi possivel restaurar o arquivo.");
+      setStatus(getApiErrorMessage(err, "Nao foi possivel restaurar o arquivo."));
     } finally {
       setConfirmLoading(false);
     }
@@ -216,7 +223,7 @@ export default function FilesPage() {
       setStatus("Arquivo excluido permanentemente.");
       await loadTrashFiles();
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Nao foi possivel excluir permanentemente.");
+      setStatus(getApiErrorMessage(err, "Nao foi possivel excluir permanentemente."));
     } finally {
       setConfirmLoading(false);
     }
@@ -239,7 +246,7 @@ export default function FilesPage() {
 
       setStatus("Download iniciado.");
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Nao foi possivel iniciar o download.");
+      setStatus(getApiErrorMessage(err, "Nao foi possivel iniciar o download."));
     }
   };
 
@@ -251,13 +258,73 @@ export default function FilesPage() {
       setPreviewUrl(download_url);
       setStatus("");
     } catch (err) {
-      setStatus(err?.response?.data?.detail || "Nao foi possivel abrir o preview.");
+      setStatus(getApiErrorMessage(err, "Nao foi possivel abrir o preview."));
     }
   };
 
   const closePreview = () => {
     setPreviewFile(null);
     setPreviewUrl("");
+  };
+
+  const openShareModal = (file) => {
+    setShareTarget(file);
+    setSharePassword("");
+    setShareExpiresInDays("");
+    setShareResult(null);
+  };
+
+  const closeShareModal = () => {
+    if (shareLoading) return;
+    setShareTarget(null);
+    setSharePassword("");
+    setShareExpiresInDays("");
+    setShareResult(null);
+  };
+
+  const handleCreateShareLink = async () => {
+    if (!shareTarget) return;
+
+    try {
+      setShareLoading(true);
+      setStatus("");
+
+      const daysValue = shareExpiresInDays.trim();
+      const parsedDays = daysValue ? Number(daysValue) : null;
+      if (daysValue && (!Number.isInteger(parsedDays) || parsedDays < 1 || parsedDays > 365)) {
+        setStatus("Dias de expiracao deve ser um inteiro entre 1 e 365.");
+        return;
+      }
+
+      const cleanPassword = sharePassword.trim();
+      if (cleanPassword && cleanPassword.length < 4) {
+        setStatus("Senha deve ter no minimo 4 caracteres.");
+        return;
+      }
+
+      const result = await createFileShareLink(shareTarget.id, {
+        expiresInDays: parsedDays,
+        password: cleanPassword || null,
+      });
+
+      setShareResult(result);
+      setStatus("Link publico gerado com sucesso.");
+    } catch (err) {
+      setStatus(getApiErrorMessage(err, "Nao foi possivel gerar o link publico."));
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyShareLink = async () => {
+    if (!shareResult?.public_url) return;
+
+    try {
+      await navigator.clipboard.writeText(shareResult.public_url);
+      setStatus("Link copiado para a area de transferencia.");
+    } catch {
+      setStatus("Nao foi possivel copiar automaticamente. Copie manualmente.");
+    }
   };
 
   return (
@@ -285,9 +352,6 @@ export default function FilesPage() {
                 ? `Enviando ${uploadState.filename}...`
                 : "Upload direto para o storage com URL assinada."}
             </p>
-          </div>
-          <div className="upload-inline">
-            <input className="file-input-minimal" type="file" onChange={handleManualFileInput} />
           </div>
           {(uploadState.inProgress || uploadState.progress > 0) && (
             <div className="upload-progress-wrap" aria-live="polite">
@@ -353,6 +417,9 @@ export default function FilesPage() {
                   </button>
                   <button className="ghost" onClick={() => handleDownload(file)}>
                     Baixar
+                  </button>
+                  <button className="ghost" onClick={() => openShareModal(file)}>
+                    Compartilhar
                   </button>
                   <button className="danger" onClick={() => setDeleteTarget(file)}>
                     Excluir
@@ -425,6 +492,70 @@ export default function FilesPage() {
         onClose={closePreview}
         onDownload={() => previewFile && handleDownload(previewFile)}
       />
+
+      {shareTarget && (
+        <div className="modal-overlay" role="presentation" onClick={closeShareModal}>
+          <section
+            className="modal card"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Criar link publico"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3>Compartilhar arquivo</h3>
+            <p className="muted">Arquivo: {shareTarget.name}</p>
+
+            <div className="form">
+              <label>
+                Expiracao em dias (opcional)
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={shareExpiresInDays}
+                  onChange={(event) => setShareExpiresInDays(event.target.value)}
+                  placeholder="Ex: 7"
+                  disabled={shareLoading}
+                />
+              </label>
+
+              <label>
+                Senha (opcional)
+                <input
+                  type="password"
+                  value={sharePassword}
+                  onChange={(event) => setSharePassword(event.target.value)}
+                  placeholder="Mínimo 4 caracteres"
+                  disabled={shareLoading}
+                />
+              </label>
+            </div>
+
+            {shareResult?.public_url && (
+              <div className="share-link-result">
+                <label>
+                  Link publico
+                  <input type="text" readOnly value={shareResult.public_url} />
+                </label>
+                <div className="row-actions">
+                  <button className="ghost" onClick={copyShareLink}>
+                    Copiar link
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button className="ghost" onClick={closeShareModal} disabled={shareLoading}>
+                Fechar
+              </button>
+              <button onClick={handleCreateShareLink} disabled={shareLoading}>
+                {shareLoading ? "Gerando..." : "Gerar link"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }

@@ -13,7 +13,9 @@ from app.routes.files import router as files_router
 from app.routes.folders import router as folders_router
 from app.routes.notifications import router as notifications_router
 from app.routes.profile import router as profile_router
+from app.routes.public_shares import router as public_shares_router
 from app.routes.search import router as search_router
+from app.routes.shares import router as shares_router
 from app.services.file_cleanup_service import FileCleanupService, run_trash_cleanup_loop
 from app.services.minio_service import MinioService
 
@@ -34,6 +36,9 @@ async def lifespan(_: FastAPI):
 		await db["files"].create_index([("deleted_at", 1)])
 		await db["notifications"].create_index([("owner_id", 1), ("created_at", -1)])
 		await db["notifications"].create_index([("owner_id", 1), ("is_read", 1)])
+		await db["share_links"].create_index([("token", 1)], unique=True)
+		await db["share_links"].create_index([("owner_id", 1), ("file_id", 1)])
+		await db["share_links"].create_index([("expires_at", 1)])
 		print("MongoDB indices criados com sucesso")
 	except Exception as e:
 		print(f"Erro ao criar índices no MongoDB: {e}")
@@ -78,6 +83,8 @@ app.include_router(files_router, prefix=settings.api_prefix)
 app.include_router(search_router, prefix=settings.api_prefix)
 app.include_router(notifications_router, prefix=settings.api_prefix)
 app.include_router(profile_router, prefix=settings.api_prefix)
+app.include_router(shares_router, prefix=settings.api_prefix)
+app.include_router(public_shares_router, prefix=settings.api_prefix)
 
 
 @app.get("/health", tags=["health"])

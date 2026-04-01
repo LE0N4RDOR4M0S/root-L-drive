@@ -1,6 +1,7 @@
 from app.domain.entities.file import FileEntity
 from app.domain.entities.folder import Folder
 from app.domain.entities.notification import NotificationEntity
+from app.domain.entities.share_link import ShareLinkEntity
 from app.domain.entities.user import User
 
 
@@ -54,5 +55,17 @@ def notification_from_mongo(doc: dict) -> NotificationEntity:
         entity_type=doc.get("entity_type"),
         entity_id=doc.get("entity_id"),
         is_read=doc.get("is_read", False),
+        created_at=doc["created_at"],
+    )
+
+
+def share_link_from_mongo(doc: dict) -> ShareLinkEntity:
+    return ShareLinkEntity(
+        id=str(doc["_id"]),
+        token=doc["token"],
+        owner_id=doc["owner_id"],
+        file_id=doc["file_id"],
+        password_hash=doc.get("password_hash"),
+        expires_at=doc.get("expires_at"),
         created_at=doc["created_at"],
     )

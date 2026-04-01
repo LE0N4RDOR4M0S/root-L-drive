@@ -73,6 +73,32 @@ export async function hardDeleteFile(fileId) {
   await apiClient.delete(`/files/${fileId}/hard`);
 }
 
+export async function createFileShareLink(fileId, payload = {}) {
+  const { data } = await apiClient.post(`/shares/files/${fileId}`, {
+    expires_in_days: payload.expiresInDays ?? null,
+    password: payload.password || null,
+  });
+  return data;
+}
+
+export async function getSharedFileInfo(token) {
+  const { data } = await apiClient.get(`/public/shares/${token}`);
+  return data;
+}
+
+export async function downloadSharedFile(token, password = null) {
+  const response = await apiClient.post(
+    `/public/shares/${token}/download`,
+    { password },
+    { responseType: "blob" }
+  );
+
+  return {
+    blob: response.data,
+    filename: extractFilename(response.headers["content-disposition"]),
+  };
+}
+
 export async function requestDownloadUrl(fileId) {
   const { data } = await apiClient.get(`/files/${fileId}/download-url`);
   return data;

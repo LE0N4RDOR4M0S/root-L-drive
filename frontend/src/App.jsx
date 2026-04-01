@@ -5,6 +5,7 @@ import FilesPage from "./pages/FilesPage";
 import FoldersPage from "./pages/FoldersPage";
 import LoginPage from "./pages/LoginPage";
 import OverviewPage from "./pages/OverviewPage";
+import PublicSharePage from "./pages/PublicSharePage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("auth_token");
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/share/:token" element={<PublicSharePage />} />
       <Route
         path="/"
         element={
