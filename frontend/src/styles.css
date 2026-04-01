@@ -684,6 +684,73 @@ body {
   gap: 0.75rem;
 }
 
+.upload-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dropzone {
+  border: 1px dashed #9fb7dc;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.dropzone:hover {
+  border-color: #6f97cf;
+  background: #f2f8ff;
+}
+
+.dropzone.drag-active {
+  border-color: #2a5ea8;
+  background: #edf5ff;
+}
+
+.dropzone.disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.dropzone-title {
+  margin: 0;
+  color: #153e79;
+  font-weight: 600;
+}
+
+.upload-progress-wrap {
+  border: 1px solid #d7e4f8;
+  border-radius: 10px;
+  background: #fafdff;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.upload-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  color: #34527e;
+  font-size: 0.85rem;
+}
+
+.upload-progress-track {
+  height: 8px;
+  background: #dbe7f8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1d4f9c 0%, #2d7da8 100%);
+  transition: width 120ms linear;
+}
+
 .file-input-minimal {
   width: 100%;
   border-style: dashed;

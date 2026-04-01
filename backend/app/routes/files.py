@@ -64,6 +64,7 @@ async def complete_upload(payload: CompleteUploadRequest, current_user=Depends(g
         size=file_item.size,
         mime_type=file_item.mime_type,
         created_at=file_item.created_at,
+        deleted_at=file_item.deleted_at,
     )
 
 
@@ -81,6 +82,27 @@ async def list_files(folder_id: str | None = None, current_user=Depends(get_curr
             size=item.size,
             mime_type=item.mime_type,
             created_at=item.created_at,
+            deleted_at=item.deleted_at,
+        )
+        for item in files
+    ]
+
+
+@router.get("/trash", response_model=list[FileResponse])
+async def list_trash_files(current_user=Depends(get_current_user), limit: int = 200):
+    service = get_file_service()
+    files = await service.list_trash_files(owner_id=current_user.id, limit=limit)
+    return [
+        FileResponse(
+            id=item.id,
+            name=item.name,
+            owner_id=item.owner_id,
+            folder_id=item.folder_id,
+            minio_key=item.minio_key,
+            size=item.size,
+            mime_type=item.mime_type,
+            created_at=item.created_at,
+            deleted_at=item.deleted_at,
         )
         for item in files
     ]
@@ -118,3 +140,15 @@ async def download_file(file_id: str, current_user=Depends(get_current_user)):
 async def delete_file(file_id: str, current_user=Depends(get_current_user)):
     service = get_file_service()
     await service.delete_file(owner_id=current_user.id, file_id=file_id)
+
+
+@router.patch("/{file_id}/restore", status_code=status.HTTP_204_NO_CONTENT)
+async def restore_file(file_id: str, current_user=Depends(get_current_user)):
+    service = get_file_service()
+    await service.restore_file(owner_id=current_user.id, file_id=file_id)
+
+
+@router.delete("/{file_id}/hard", status_code=status.HTTP_204_NO_CONTENT)
+async def hard_delete_file(file_id: str, current_user=Depends(get_current_user)):
+    service = get_file_service()
+    await service.hard_delete_file(owner_id=current_user.id, file_id=file_id)

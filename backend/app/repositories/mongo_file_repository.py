@@ -99,3 +99,30 @@ class MongoFileRepository(FileRepository):
             return False
         result = await self.collection.delete_one({"_id": as_object_id(file_id)})
         return result.deleted_count == 1
+
+    async def list_deleted_by_owner(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
+        safe_limit = max(1, min(limit, 1000))
+        cursor = (
+            self.collection.find({"owner_id": owner_id, "deleted_at": {"$ne": None}})
+            .sort("deleted_at", -1)
+            .limit(safe_limit)
+        )
+        docs = await cursor.to_list(length=safe_limit)
+        return [file_from_mongo(doc) for doc in docs]
+
+    async def get_deleted_by_id(self, file_id: str, owner_id: str) -> FileEntity | None:
+        if not is_valid_object_id(file_id):
+            return None
+        doc = await self.collection.find_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id, "deleted_at": {"$ne": None}}
+        )
+        return file_from_mongo(doc) if doc else None
+
+    async def restore(self, file_id: str, owner_id: str) -> bool:
+        if not is_valid_object_id(file_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id, "deleted_at": {"$ne": None}},
+            {"$set": {"deleted_at": None}},
+        )
+        return result.modified_count == 1

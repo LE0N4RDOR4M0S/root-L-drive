@@ -30,10 +30,15 @@ export async function requestUploadUrl(filename, folderId, mimeType) {
   return data;
 }
 
-export async function uploadToPresignedUrl(uploadUrl, file) {
+export async function uploadToPresignedUrl(uploadUrl, file, onProgress) {
   await axios.put(uploadUrl, file, {
     headers: {
       "Content-Type": file.type || "application/octet-stream",
+    },
+    onUploadProgress: (event) => {
+      if (typeof onProgress === "function") {
+        onProgress(event);
+      }
     },
   });
 }
@@ -51,6 +56,21 @@ export async function completeUpload({ name, folderId, minioKey, size, mimeType 
 
 export async function deleteFile(fileId) {
   await apiClient.delete(`/files/${fileId}`);
+}
+
+export async function listTrashFiles(limit = 200) {
+  const { data } = await apiClient.get("/files/trash", {
+    params: { limit },
+  });
+  return data;
+}
+
+export async function restoreFile(fileId) {
+  await apiClient.patch(`/files/${fileId}/restore`);
+}
+
+export async function hardDeleteFile(fileId) {
+  await apiClient.delete(`/files/${fileId}/hard`);
 }
 
 export async function requestDownloadUrl(fileId) {

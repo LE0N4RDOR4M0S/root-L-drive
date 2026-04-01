@@ -44,3 +44,15 @@ class FileRepository(ABC):
     @abstractmethod
     async def hard_delete_by_id(self, file_id: str) -> bool:
         raise NotImplementedError
+
+    @abstractmethod
+    async def list_deleted_by_owner(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_deleted_by_id(self, file_id: str, owner_id: str) -> FileEntity | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def restore(self, file_id: str, owner_id: str) -> bool:
+        raise NotImplementedError

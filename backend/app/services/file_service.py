@@ -131,3 +131,43 @@ class FileService:
             entity_type="file",
             entity_id=file_item.id,
         )
+
+    async def list_trash_files(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
+        return await self.file_repo.list_deleted_by_owner(owner_id=owner_id, limit=limit)
+
+    async def restore_file(self, owner_id: str, file_id: str) -> None:
+        file_item = await self.file_repo.get_deleted_by_id(file_id=file_id, owner_id=owner_id)
+        if file_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in trash")
+
+        restored = await self.file_repo.restore(file_id=file_id, owner_id=owner_id)
+        if not restored:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in trash")
+
+        await self.notification_repo.create(
+            owner_id=owner_id,
+            title="Arquivo restaurado",
+            message=f"O arquivo '{file_item.name}' foi restaurado da lixeira.",
+            category="file",
+            entity_type="file",
+            entity_id=file_item.id,
+        )
+
+    async def hard_delete_file(self, owner_id: str, file_id: str) -> None:
+        file_item = await self.file_repo.get_deleted_by_id(file_id=file_id, owner_id=owner_id)
+        if file_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in trash")
+
+        await self.minio_service.delete_object(file_item.minio_key)
+        deleted = await self.file_repo.hard_delete_by_id(file_id=file_id)
+        if not deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found in trash")
+
+        await self.notification_repo.create(
+            owner_id=owner_id,
+            title="Arquivo excluido permanentemente",
+            message=f"O arquivo '{file_item.name}' foi excluido permanentemente.",
+            category="file",
+            entity_type="file",
+            entity_id=file_item.id,
+        )
