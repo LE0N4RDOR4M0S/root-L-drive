@@ -1,6 +1,6 @@
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from starlette.background import BackgroundTask
 from starlette.responses import StreamingResponse
 
@@ -15,7 +15,9 @@ from app.schemas.file import (
     RequestDownloadUrlResponse,
     RequestUploadUrlRequest,
     RequestUploadUrlResponse,
+    UploadFileResponse,
 )
+from app.services.server_crypto_service import ServerCryptoService
 from app.services.file_service import FileService
 from app.services.minio_service import MinioService
 
@@ -30,32 +32,15 @@ def get_file_service() -> FileService:
         folder_repo=MongoFolderRepository(db),
         notification_repo=MongoNotificationRepository(db),
         minio_service=MinioService(),
+        crypto_service=ServerCryptoService(),
     )
 
 
-@router.post("/upload-url", response_model=RequestUploadUrlResponse)
-async def request_upload_url(payload: RequestUploadUrlRequest, current_user=Depends(get_current_user)):
+@router.post("/upload", response_model=UploadFileResponse, status_code=status.HTTP_201_CREATED)
+async def upload_file(file: UploadFile = File(...), folder_id: str | None = Form(default=None), current_user=Depends(get_current_user)):
     service = get_file_service()
-    result = await service.request_upload_url(
-        owner_id=current_user.id,
-        filename=payload.filename,
-        folder_id=payload.folder_id,
-    )
-    return RequestUploadUrlResponse(**result)
-
-
-@router.post("/complete", response_model=FileResponse, status_code=status.HTTP_201_CREATED)
-async def complete_upload(payload: CompleteUploadRequest, current_user=Depends(get_current_user)):
-    service = get_file_service()
-    file_item = await service.complete_upload(
-        owner_id=current_user.id,
-        name=payload.name,
-        folder_id=payload.folder_id,
-        minio_key=payload.minio_key,
-        size=payload.size,
-        mime_type=payload.mime_type,
-    )
-    return FileResponse(
+    file_item = await service.upload_file(owner_id=current_user.id, file=file, folder_id=folder_id)
+    return UploadFileResponse(
         id=file_item.id,
         name=file_item.name,
         owner_id=file_item.owner_id,
@@ -63,8 +48,28 @@ async def complete_upload(payload: CompleteUploadRequest, current_user=Depends(g
         minio_key=file_item.minio_key,
         size=file_item.size,
         mime_type=file_item.mime_type,
+        original_mime_type=file_item.original_mime_type,
+        is_encrypted=file_item.is_encrypted,
+        encryption_algorithm=file_item.encryption_algorithm,
+        encryption_nonce=file_item.encryption_nonce,
         created_at=file_item.created_at,
         deleted_at=file_item.deleted_at,
+    )
+
+
+@router.post("/upload-url", response_model=RequestUploadUrlResponse)
+async def request_upload_url(payload: RequestUploadUrlRequest, current_user=Depends(get_current_user)):
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Endpoint deprecated. Use POST /files/upload for encrypted server-side upload.",
+    )
+
+
+@router.post("/complete", response_model=FileResponse, status_code=status.HTTP_201_CREATED)
+async def complete_upload(payload: CompleteUploadRequest, current_user=Depends(get_current_user)):
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Endpoint deprecated. Use POST /files/upload for encrypted server-side upload.",
     )
 
 
@@ -81,6 +86,10 @@ async def list_files(folder_id: str | None = None, current_user=Depends(get_curr
             minio_key=item.minio_key,
             size=item.size,
             mime_type=item.mime_type,
+            original_mime_type=item.original_mime_type,
+            is_encrypted=item.is_encrypted,
+            encryption_algorithm=item.encryption_algorithm,
+            encryption_nonce=item.encryption_nonce,
             created_at=item.created_at,
             deleted_at=item.deleted_at,
         )
@@ -101,6 +110,10 @@ async def list_trash_files(current_user=Depends(get_current_user), limit: int = 
             minio_key=item.minio_key,
             size=item.size,
             mime_type=item.mime_type,
+            original_mime_type=item.original_mime_type,
+            is_encrypted=item.is_encrypted,
+            encryption_algorithm=item.encryption_algorithm,
+            encryption_nonce=item.encryption_nonce,
             created_at=item.created_at,
             deleted_at=item.deleted_at,
         )

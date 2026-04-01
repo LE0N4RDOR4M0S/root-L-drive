@@ -14,6 +14,10 @@ class FileRepository(ABC):
         minio_key: str,
         size: int,
         mime_type: str,
+        original_mime_type: str | None = None,
+        is_encrypted: bool = False,
+        encryption_algorithm: str | None = None,
+        encryption_nonce: str | None = None,
     ) -> FileEntity:
         raise NotImplementedError
 

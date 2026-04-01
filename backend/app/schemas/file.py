@@ -15,6 +15,22 @@ class RequestUploadUrlResponse(BaseModel):
     expires_in: int
 
 
+class UploadFileResponse(BaseModel):
+    id: str
+    name: str
+    owner_id: str
+    folder_id: str | None
+    minio_key: str
+    size: int
+    mime_type: str
+    original_mime_type: str | None = None
+    is_encrypted: bool = False
+    encryption_algorithm: str | None = None
+    encryption_nonce: str | None = None
+    created_at: datetime
+    deleted_at: datetime | None = None
+
+
 class RequestDownloadUrlResponse(BaseModel):
     download_url: str
     expires_in: int
@@ -37,5 +53,9 @@ class FileResponse(BaseModel):
     minio_key: str
     size: int
     mime_type: str
+    original_mime_type: str | None = None
+    is_encrypted: bool = False
+    encryption_algorithm: str | None = None
+    encryption_nonce: str | None = None
     created_at: datetime
     deleted_at: datetime | None = None

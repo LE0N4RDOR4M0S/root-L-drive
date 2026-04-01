@@ -18,9 +18,11 @@ class CreateShareLinkResponse(BaseModel):
 class ShareLinkPublicInfoResponse(BaseModel):
     filename: str
     mime_type: str
+    original_mime_type: str | None
     size: int
     expires_at: datetime | None
     requires_password: bool
+    is_encrypted: bool
 
 
 class ShareLinkDownloadRequest(BaseModel):

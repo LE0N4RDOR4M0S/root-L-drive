@@ -9,6 +9,7 @@ from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_share_link_repository import MongoShareLinkRepository
 from app.schemas.share import ShareLinkDownloadRequest, ShareLinkPublicInfoResponse
+from app.services.server_crypto_service import ServerCryptoService
 from app.services.minio_service import MinioService
 from app.services.share_service import ShareService
 
@@ -22,6 +23,7 @@ def get_public_share_service() -> ShareService:
         file_repo=MongoFileRepository(db),
         share_repo=MongoShareLinkRepository(db),
         minio_service=MinioService(),
+        crypto_service=ServerCryptoService(),
         public_base_url=settings.frontend_public_url,
     )
 

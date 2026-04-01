@@ -40,6 +40,10 @@ def file_from_mongo(doc: dict) -> FileEntity:
         minio_key=doc["minio_key"],
         size=doc["size"],
         mime_type=doc["mime_type"],
+        original_mime_type=doc.get("original_mime_type"),
+        is_encrypted=doc.get("is_encrypted", False),
+        encryption_algorithm=doc.get("encryption_algorithm"),
+        encryption_nonce=doc.get("encryption_nonce"),
         created_at=doc["created_at"],
         deleted_at=doc.get("deleted_at"),
     )

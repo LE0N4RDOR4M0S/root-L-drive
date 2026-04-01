@@ -6,6 +6,8 @@ from fastapi import HTTPException, status
 from app.core.security import hash_password, verify_password
 from app.domain.repositories.file_repository import FileRepository
 from app.domain.repositories.share_link_repository import ShareLinkRepository
+from app.services.server_crypto_service import ServerCryptoService
+from app.services.stream_utils import InMemoryObjectStream
 from app.services.minio_service import MinioService
 
 
@@ -15,11 +17,13 @@ class ShareService:
         file_repo: FileRepository,
         share_repo: ShareLinkRepository,
         minio_service: MinioService,
+        crypto_service: ServerCryptoService,
         public_base_url: str,
     ) -> None:
         self.file_repo = file_repo
         self.share_repo = share_repo
         self.minio_service = minio_service
+        self.crypto_service = crypto_service
         self.public_base_url = public_base_url.rstrip("/")
 
     async def create_file_share_link(
@@ -60,9 +64,11 @@ class ShareService:
         return {
             "filename": file_item.name,
             "mime_type": file_item.mime_type,
+            "original_mime_type": file_item.original_mime_type,
             "size": file_item.size,
             "expires_at": share_link.expires_at,
             "requires_password": bool(share_link.password_hash),
+            "is_encrypted": file_item.is_encrypted,
         }
 
     async def get_public_download_stream(self, token: str, password: str | None):
@@ -71,6 +77,15 @@ class ShareService:
         if share_link.password_hash:
             if not password or not verify_password(password, share_link.password_hash):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
+
+        if file_item.is_encrypted and file_item.encryption_nonce:
+            encrypted_payload = await self.minio_service.get_object_bytes(file_item.minio_key)
+            plain_payload = self.crypto_service.decrypt_bytes(encrypted_payload, file_item.encryption_nonce)
+            return (
+                InMemoryObjectStream(plain_payload),
+                file_item.name,
+                file_item.original_mime_type or "application/octet-stream",
+            )
 
         stream = await self.minio_service.get_object_stream(file_item.minio_key)
         return stream, file_item.name, file_item.mime_type

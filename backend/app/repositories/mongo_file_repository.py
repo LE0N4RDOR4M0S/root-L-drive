@@ -19,6 +19,10 @@ class MongoFileRepository(FileRepository):
         minio_key: str,
         size: int,
         mime_type: str,
+        original_mime_type: str | None = None,
+        is_encrypted: bool = False,
+        encryption_algorithm: str | None = None,
+        encryption_nonce: str | None = None,
     ) -> FileEntity:
         now = datetime.now(timezone.utc)
         doc = {
@@ -28,6 +32,10 @@ class MongoFileRepository(FileRepository):
             "minio_key": minio_key,
             "size": size,
             "mime_type": mime_type,
+            "original_mime_type": original_mime_type,
+            "is_encrypted": is_encrypted,
+            "encryption_algorithm": encryption_algorithm,
+            "encryption_nonce": encryption_nonce,
             "created_at": now,
             "deleted_at": None,
         }

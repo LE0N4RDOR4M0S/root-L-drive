@@ -2,11 +2,9 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  completeUpload,
   deleteFile,
   listFiles,
-  requestUploadUrl,
-  uploadToPresignedUrl,
+  uploadFileViaBackend,
 } from "../api/files";
 import { createFolder, deleteFolder, listFolders } from "../api/folders";
 import { clearAuth } from "../api/client";
@@ -66,24 +64,8 @@ export default function DashboardPage() {
     if (!file) return;
 
     try {
-      setStatus("Requesting upload URL...");
-      const { upload_url, minio_key } = await requestUploadUrl(
-        file.name,
-        currentFolderId,
-        file.type
-      );
-
-      setStatus("Uploading directly to storage...");
-      await uploadToPresignedUrl(upload_url, file);
-
-      setStatus("Saving file metadata...");
-      await completeUpload({
-        name: file.name,
-        folderId: currentFolderId,
-        minioKey: minio_key,
-        size: file.size,
-        mimeType: file.type || "application/octet-stream",
-      });
+      setStatus("Uploading encrypted file via backend...");
+      await uploadFileViaBackend(file, currentFolderId);
 
       setStatus("File uploaded successfully");
       await loadData(currentFolderId);

@@ -2,11 +2,14 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import HTTPException, status
+from fastapi import UploadFile
 
 from app.domain.entities.file import FileEntity
 from app.domain.repositories.file_repository import FileRepository
 from app.domain.repositories.folder_repository import FolderRepository
 from app.domain.repositories.notification_repository import NotificationRepository
+from app.services.server_crypto_service import ServerCryptoService
+from app.services.stream_utils import InMemoryObjectStream
 from app.services.minio_service import MinioService
 
 
@@ -17,11 +20,54 @@ class FileService:
         folder_repo: FolderRepository,
         notification_repo: NotificationRepository,
         minio_service: MinioService,
+        crypto_service: ServerCryptoService,
     ) -> None:
         self.file_repo = file_repo
         self.folder_repo = folder_repo
         self.notification_repo = notification_repo
         self.minio_service = minio_service
+        self.crypto_service = crypto_service
+
+    async def upload_file(self, owner_id: str, file: UploadFile, folder_id: str | None) -> FileEntity:
+        if folder_id:
+            folder = await self.folder_repo.get_by_id(folder_id, owner_id)
+            if folder is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+
+        safe_name = Path(file.filename or "file").name
+        object_key = f"{owner_id}/{folder_id or 'root'}/{uuid4().hex}-{safe_name}"
+
+        payload = await file.read()
+        encrypted_payload, algorithm, nonce = self.crypto_service.encrypt_bytes(payload)
+
+        await self.minio_service.put_object_bytes(
+            object_key=object_key,
+            payload=encrypted_payload,
+            content_type="application/octet-stream",
+        )
+
+        file_item = await self.file_repo.create(
+            name=safe_name,
+            owner_id=owner_id,
+            folder_id=folder_id,
+            minio_key=object_key,
+            size=len(payload),
+            mime_type="application/octet-stream",
+            original_mime_type=file.content_type or "application/octet-stream",
+            is_encrypted=True,
+            encryption_algorithm=algorithm,
+            encryption_nonce=nonce,
+        )
+
+        await self.notification_repo.create(
+            owner_id=owner_id,
+            title="Arquivo enviado",
+            message=f"O arquivo '{file_item.name}' foi enviado com sucesso.",
+            category="file",
+            entity_type="file",
+            entity_id=file_item.id,
+        )
+        return file_item
 
     async def request_upload_url(
         self,
@@ -110,6 +156,15 @@ class FileService:
         file_item = await self.file_repo.get_by_id(file_id, owner_id)
         if file_item is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+        if file_item.is_encrypted and file_item.encryption_nonce:
+            encrypted_payload = await self.minio_service.get_object_bytes(file_item.minio_key)
+            plain_payload = self.crypto_service.decrypt_bytes(encrypted_payload, file_item.encryption_nonce)
+            return (
+                InMemoryObjectStream(plain_payload),
+                file_item.name,
+                file_item.original_mime_type or "application/octet-stream",
+            )
 
         stream = await self.minio_service.get_object_stream(file_item.minio_key)
         return stream, file_item.name, file_item.mime_type

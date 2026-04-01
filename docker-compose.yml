@@ -15,6 +15,9 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_SECURE: "false"
       MINIO_BUCKET_NAME: private-drive
+      MINIO_FORCE_SSE: "false"
+      MINIO_SSE_STRICT: "false"
+      FILE_ENCRYPTION_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
       CORS_ALLOW_ORIGINS: http://localhost:5173,http://frontend:5173
     ports:
       - "8000:8000"

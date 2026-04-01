@@ -6,7 +6,6 @@ import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
 import FilePreviewModal from "../components/FilePreviewModal";
 import {
-  completeUpload,
   createFileShareLink,
   deleteFile,
   downloadFile,
@@ -14,9 +13,8 @@ import {
   listTrashFiles,
   listFiles,
   requestDownloadUrl,
-  requestUploadUrl,
   restoreFile,
-  uploadToPresignedUrl,
+  uploadFileViaBackend,
 } from "../api/files";
 import { getApiErrorMessage } from "../api/client";
 import useFolderNavigator from "../hooks/useFolderNavigator";
@@ -122,27 +120,11 @@ export default function FilesPage() {
 
     try {
       setUploadState({ inProgress: true, filename: file.name, progress: 0 });
-      setStatus("Solicitando URL de upload...");
-      const { upload_url, minio_key } = await requestUploadUrl(
-        file.name,
-        currentFolderId,
-        file.type
-      );
-
-      setStatus("Enviando arquivo para storage...");
-      await uploadToPresignedUrl(upload_url, file, (event) => {
+      setStatus("Enviando arquivo criptografado pelo servidor...");
+      await uploadFileViaBackend(file, currentFolderId, (event) => {
         const total = event.total || file.size || 1;
         const percent = Math.min(100, Math.round((event.loaded * 100) / total));
         setUploadState((current) => ({ ...current, progress: percent }));
-      });
-
-      setStatus("Registrando metadata...");
-      await completeUpload({
-        name: file.name,
-        folderId: currentFolderId,
-        minioKey: minio_key,
-        size: file.size,
-        mimeType: file.type || "application/octet-stream",
       });
 
       setStatus("Upload concluido com sucesso.");
@@ -341,6 +323,7 @@ export default function FilesPage() {
           <h3>Upload de arquivo</h3>
         </div>
         <div className="upload-stack">
+          <p className="muted">Criptografia no servidor ativada para todos os uploads.</p>
           <div
             {...getRootProps()}
             className={`dropzone ${isDragActive ? "drag-active" : ""} ${uploadState.inProgress ? "disabled" : ""}`}
@@ -350,7 +333,7 @@ export default function FilesPage() {
             <p className="muted">
               {uploadState.inProgress
                 ? `Enviando ${uploadState.filename}...`
-                : "Upload direto para o storage com URL assinada."}
+                : "Upload via backend com criptografia obrigatoria no servidor."}
             </p>
           </div>
           {(uploadState.inProgress || uploadState.progress > 0) && (

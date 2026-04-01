@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     minio_secret_key: str = "minioadmin"
     minio_secure: bool = False
     minio_bucket_name: str = "private-drive"
+    minio_force_sse: bool = False
+    minio_sse_strict: bool = False
+    file_encryption_key_base64: str = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
 
     trash_retention_days: int = 30
     trash_cleanup_interval_seconds: int = 3600

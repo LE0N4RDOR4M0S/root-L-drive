@@ -30,6 +30,27 @@ export async function requestUploadUrl(filename, folderId, mimeType) {
   return data;
 }
 
+export async function uploadFileViaBackend(file, folderId = null, onProgress) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (folderId) {
+    formData.append("folder_id", folderId);
+  }
+
+  const { data } = await apiClient.post("/files/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    onUploadProgress: (event) => {
+      if (typeof onProgress === "function") {
+        onProgress(event);
+      }
+    },
+  });
+
+  return data;
+}
+
 export async function uploadToPresignedUrl(uploadUrl, file, onProgress) {
   await axios.put(uploadUrl, file, {
     headers: {
@@ -43,7 +64,13 @@ export async function uploadToPresignedUrl(uploadUrl, file, onProgress) {
   });
 }
 
-export async function completeUpload({ name, folderId, minioKey, size, mimeType }) {
+export async function completeUpload({
+  name,
+  folderId,
+  minioKey,
+  size,
+  mimeType,
+}) {
   const { data } = await apiClient.post("/files/complete", {
     name,
     folder_id: folderId,
