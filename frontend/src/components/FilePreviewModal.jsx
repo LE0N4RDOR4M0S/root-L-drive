@@ -30,7 +30,7 @@ export default function FilePreviewModal({ open, file, previewUrl, onClose, onDo
   if (!open || !file || !previewUrl) return null;
 
   const ext = getExtension(file.name);
-  const mimeType = file.mime_type || "";
+  const mimeType = file.original_mime_type || file.mime_type || "";
 
   const renderPreview = () => {
     if (isImage(mimeType, ext)) {

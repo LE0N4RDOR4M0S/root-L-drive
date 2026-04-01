@@ -12,7 +12,6 @@ import {
   hardDeleteFile,
   listTrashFiles,
   listFiles,
-  requestDownloadUrl,
   restoreFile,
   uploadFileViaBackend,
 } from "../api/files";
@@ -235,9 +234,10 @@ export default function FilesPage() {
   const handlePreview = async (file) => {
     try {
       setStatus("Preparando preview...");
-      const { download_url } = await requestDownloadUrl(file.id);
+      const { blob } = await downloadFile(file.id);
+      const previewObjectUrl = URL.createObjectURL(blob);
       setPreviewFile(file);
-      setPreviewUrl(download_url);
+      setPreviewUrl(previewObjectUrl);
       setStatus("");
     } catch (err) {
       setStatus(getApiErrorMessage(err, "Nao foi possivel abrir o preview."));
@@ -245,6 +245,9 @@ export default function FilesPage() {
   };
 
   const closePreview = () => {
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewFile(null);
     setPreviewUrl("");
   };
