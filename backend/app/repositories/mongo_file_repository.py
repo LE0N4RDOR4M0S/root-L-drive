@@ -134,3 +134,48 @@ class MongoFileRepository(FileRepository):
             {"$set": {"deleted_at": None}},
         )
         return result.modified_count == 1
+
+    # RAG (Busca Semântica) methods
+    async def update_rag_data(
+        self,
+        file_id: str,
+        owner_id: str,
+        extracted_text: str,
+        text_embedding: list[float],
+    ) -> bool:
+        """Atualiza dados de RAG após processamento."""
+        if not is_valid_object_id(file_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id},
+            {
+                "$set": {
+                    "extracted_text": extracted_text,
+                    "text_embedding": text_embedding,
+                    "is_indexed_for_search": True,
+                    "rag_processed_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return result.modified_count == 1
+
+    # Auto-tagging methods
+    async def update_image_tags(
+        self,
+        file_id: str,
+        owner_id: str,
+        tags: list[dict],
+    ) -> bool:
+        """Atualiza tags após processamento de imagem."""
+        if not is_valid_object_id(file_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id},
+            {
+                "$set": {
+                    "tags": tags,
+                    "tags_processed_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return result.modified_count == 1

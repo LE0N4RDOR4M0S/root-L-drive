@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     cors_allow_origins: str = "http://localhost:5173,http://localhost:3000"
     frontend_public_url: str = "http://localhost:5173"
 
+    # Celery / Task Queue
+    celery_broker_url: str = "redis://redis:6379/0"
+    celery_result_backend: str = "redis://redis:6379/1"
+
+    # ML Models
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    vision_model_name: str = "ViT-B/32"
+    max_image_tags: int = 10
+    min_tag_confidence: float = 0.15
+    max_text_extraction_chars: int = 100000
+
     model_config = SettingsConfigDict(env_file_encoding="utf-8")
     
     def __init__(self, **data):

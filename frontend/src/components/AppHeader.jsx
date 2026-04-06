@@ -11,6 +11,7 @@ import {
   searchWorkspace,
 } from "../api/header";
 import ProfileEditModal from "./ProfileEditModal";
+import SemanticSearchModal from "./SemanticSearchModal";
 
 const pathLabels = {
   "/": "Visão Geral",
@@ -31,6 +32,7 @@ export default function AppHeader() {
   const [profile, setProfile] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [isSemanticSearchOpen, setIsSemanticSearchOpen] = useState(false);
 
   const activeLabel = useMemo(() => {
     return pathLabels[location.pathname] ?? "Painel";
@@ -206,6 +208,29 @@ export default function AppHeader() {
       </form>
 
       <div className="header-tools">
+        <button
+          type="button"
+          className="icon-btn semantic-search-btn"
+          onClick={() => setIsSemanticSearchOpen(true)}
+          title="Busca semântica por conteúdo"
+          aria-label="Busca semântica"
+        >
+          <span aria-hidden="true" className="icon-wrap">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              {/* Lupa com símbolo de IA */}
+              <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M13 13l6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              {/* Estrela/AI symbol */}
+              <path d="M15 8l1 3h3l-2 2 1 3-3-2-3 2 1-3-2-2h3z" fill="currentColor" opacity="0.4" />
+            </svg>
+          </span>
+        </button>
+
+        <SemanticSearchModal 
+          isOpen={isSemanticSearchOpen}
+          onClose={() => setIsSemanticSearchOpen(false)}
+        />
+
         <div className={`notif-panel ${isNotifOpen ? "open" : ""}`}>
           <button
             type="button"

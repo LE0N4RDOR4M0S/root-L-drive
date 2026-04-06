@@ -16,8 +16,11 @@ from app.routes.profile import router as profile_router
 from app.routes.public_shares import router as public_shares_router
 from app.routes.search import router as search_router
 from app.routes.shares import router as shares_router
+from app.routes.processing import router as processing_router
 from app.services.file_cleanup_service import FileCleanupService, run_trash_cleanup_loop
 from app.services.minio_service import MinioService
+# Importar tasks para registrá-las no Celery
+from app.tasks import documents, images  # noqa: F401
 
 
 @asynccontextmanager
@@ -85,6 +88,7 @@ app.include_router(notifications_router, prefix=settings.api_prefix)
 app.include_router(profile_router, prefix=settings.api_prefix)
 app.include_router(shares_router, prefix=settings.api_prefix)
 app.include_router(public_shares_router, prefix=settings.api_prefix)
+app.include_router(processing_router, prefix=settings.api_prefix)
 
 
 @app.get("/health", tags=["health"])

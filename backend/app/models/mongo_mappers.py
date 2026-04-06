@@ -46,6 +46,14 @@ def file_from_mongo(doc: dict) -> FileEntity:
         encryption_nonce=doc.get("encryption_nonce"),
         created_at=doc["created_at"],
         deleted_at=doc.get("deleted_at"),
+        # RAG fields
+        is_indexed_for_search=doc.get("is_indexed_for_search", False),
+        extracted_text=doc.get("extracted_text"),
+        text_embedding=doc.get("text_embedding"),
+        rag_processed_at=doc.get("rag_processed_at"),
+        # Image tagging fields
+        tags=doc.get("tags", []),
+        tags_processed_at=doc.get("tags_processed_at"),
     )
 
 

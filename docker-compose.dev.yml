@@ -35,6 +35,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: private-driver-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mongo_data_dev:
   minio_data_dev:
+  redis_data_dev:

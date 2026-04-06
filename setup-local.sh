@@ -3,8 +3,8 @@
 
 echo "🚀 Setup Local Development..."
 
-# 1. Subir MongoDB e MinIO
-echo "📦 Iniciando MongoDB e MinIO..."
+# 1. Subir MongoDB, MinIO e Redis
+echo "📦 Iniciando MongoDB, MinIO e Redis..."
 docker-compose -f docker-compose.dev.yml up -d
 
 echo "⏳ Aguardando serviços ficarem prontos..."
@@ -54,9 +54,11 @@ echo "✅ Setup completo!"
 echo ""
 echo "📝 Próximos passos:"
 echo "1. Terminal 1 (Backend): cd backend && source venv/Scripts/activate && uvicorn app.main:app --reload"
-echo "2. Terminal 2 (Frontend): cd frontend && npm run dev"
+echo "2. Terminal 2 (Celery): cd backend && source venv/Scripts/activate && celery -A app.celery_app worker --loglevel=info"
+echo "3. Terminal 3 (Frontend): cd frontend && npm run dev"
 echo ""
 echo "Services já estão rodando:"
 echo "  - MongoDB: localhost:27017"
 echo "  - MinIO: localhost:9000 (Console: localhost:9001)"
+echo "  - Redis: localhost:6379"
 echo ""

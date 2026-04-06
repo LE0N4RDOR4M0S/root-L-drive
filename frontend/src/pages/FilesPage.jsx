@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
 import FilePreviewModal from "../components/FilePreviewModal";
+import TagBadges from "../components/TagBadges";
 import {
   createFileShareLink,
   deleteFile,
@@ -394,9 +395,21 @@ export default function FilesPage() {
             )}
             {visibleFiles.map((file) => (
               <li key={file.id}>
-                <span>
-                  {file.name} ({Math.ceil(file.size / 1024)} KB)
-                </span>
+                <div className="file-item">
+                  <div className="file-info">
+                    <span className="file-name">
+                      {file.name} ({Math.ceil(file.size / 1024)} KB)
+                    </span>
+                    {file.tags && file.tags.length > 0 && (
+                      <TagBadges tags={file.tags} />
+                    )}
+                    {file.is_indexed_for_search && (
+                      <span className="indexed-badge" title="Indexado para busca semântica">
+                        🔍 Indexado
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <div className="row-actions">
                   <button className="ghost" onClick={() => handlePreview(file)}>
                     Visualizar

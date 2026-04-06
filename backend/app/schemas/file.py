@@ -1,6 +1,20 @@
 from datetime import datetime
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
+
+
+class TagInfo(BaseModel):
+    """Informação sobre uma tag de imagem."""
+    name: str = Field(description="Nome da tag")
+    confidence: float = Field(ge=0.0, le=1.0, description="Confiança (0-1)")
+
+
+class RAGInfo(BaseModel):
+    """Informação RAG/busca semântica."""
+    is_indexed: bool = Field(description="Se o documento está indexado para busca")
+    text_length: Optional[int] = Field(None, description="Tamanho do texto extraído")
+    processed_at: Optional[datetime] = Field(None, description="Quando foi processado")
 
 
 class RequestUploadUrlRequest(BaseModel):
@@ -29,6 +43,8 @@ class UploadFileResponse(BaseModel):
     encryption_nonce: str | None = None
     created_at: datetime
     deleted_at: datetime | None = None
+    tags: List[TagInfo] = Field(default_factory=list)
+    is_indexed_for_search: bool = False
 
 
 class RequestDownloadUrlResponse(BaseModel):
@@ -59,3 +75,8 @@ class FileResponse(BaseModel):
     encryption_nonce: str | None = None
     created_at: datetime
     deleted_at: datetime | None = None
+    # Novos campos
+    tags: List[TagInfo] = Field(default_factory=list, description="Tags geradas automaticamente")
+    is_indexed_for_search: bool = Field(False, description="Se está indexado para RAG")
+    tags_processed_at: Optional[datetime] = Field(None, description="Quando tags foram geradas")
+    rag_processed_at: Optional[datetime] = Field(None, description="Quando foi processado para RAG")

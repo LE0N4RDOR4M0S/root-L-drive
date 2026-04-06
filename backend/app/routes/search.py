@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 
 from app.core.dependencies import get_current_user
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_folder_repository import MongoFolderRepository
-from app.schemas.search import SearchFileResponse, SearchFolderResponse, SearchResponse
+from app.schemas.search import (
+    SearchFileResponse, SearchFolderResponse, SearchResponse,
+    SemanticSearchRequest, SemanticSearchResponse
+)
 from app.services.search_service import SearchService
+from app.services.semantic_search_service import SemanticSearchService
 
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -50,3 +54,33 @@ async def global_search(
             for item in files
         ],
     )
+
+
+# Busca Semântica (RAG)
+@router.post("/semantic", response_model=SemanticSearchResponse)
+async def semantic_search(
+    request: SemanticSearchRequest,
+    current_user=Depends(get_current_user),
+):
+    """
+    Busca semântica em documentos.
+    
+    Encontra documentos pela similaridade do conteúdo extraído,
+    não apenas pelo nome.
+    """
+    try:
+        service = SemanticSearchService()
+        results = await service.search(
+            query=request.query,
+            user_id=current_user.id,
+            limit=request.limit,
+            min_similarity=0.35
+        )
+        
+        return SemanticSearchResponse(
+            query=request.query,
+            results=results,
+            total_results=len(results)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na busca semântica: {str(e)}")

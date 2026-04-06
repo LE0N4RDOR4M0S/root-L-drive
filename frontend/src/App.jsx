@@ -6,6 +6,7 @@ import FoldersPage from "./pages/FoldersPage";
 import LoginPage from "./pages/LoginPage";
 import OverviewPage from "./pages/OverviewPage";
 import PublicSharePage from "./pages/PublicSharePage";
+import SemanticSearchResultsPage from "./pages/SemanticSearchResultsPage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("auth_token");
@@ -31,6 +32,7 @@ export default function App() {
         <Route index element={<OverviewPage />} />
         <Route path="folders" element={<FoldersPage />} />
         <Route path="files" element={<FilesPage />} />
+        <Route path="search-results" element={<SemanticSearchResultsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

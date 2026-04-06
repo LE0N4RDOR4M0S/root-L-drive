@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional, List
 
 
 @dataclass(slots=True)
@@ -17,3 +18,11 @@ class FileEntity:
     encryption_nonce: str | None
     created_at: datetime
     deleted_at: datetime | None
+    # RAG (Retrieval-Augmented Generation)
+    is_indexed_for_search: bool = False
+    extracted_text: str | None = None
+    text_embedding: List[float] | None = None
+    rag_processed_at: datetime | None = None
+    # Auto-tagging de imagens
+    tags: List[dict] = field(default_factory=list)  # [{"name": "praia", "confidence": 0.95}]
+    tags_processed_at: datetime | None = None

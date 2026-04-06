@@ -11,6 +11,8 @@ from app.domain.repositories.notification_repository import NotificationReposito
 from app.services.server_crypto_service import ServerCryptoService
 from app.services.stream_utils import InMemoryObjectStream
 from app.services.minio_service import MinioService
+from app.services.document_extraction_service import DocumentExtractionService
+from app.celery_app import celery_app
 
 
 class FileService:
@@ -67,6 +69,12 @@ class FileService:
             entity_type="file",
             entity_id=file_item.id,
         )
+
+        # Disparar tasks de processamento background
+        original_mime = file.content_type or "application/octet-stream"
+        await self.enqueue_rag_processing(file_item.id, owner_id, original_mime)
+        await self.enqueue_image_tagging(file_item.id, owner_id, original_mime)
+
         return file_item
 
     async def request_upload_url(
@@ -225,4 +233,111 @@ class FileService:
             category="file",
             entity_type="file",
             entity_id=file_item.id,
+        )
+
+    # RAG e Auto-tagging tasks
+    async def enqueue_rag_processing(
+        self,
+        file_id: str,
+        owner_id: str,
+        original_mime_type: str,
+    ) -> None:
+        """Dispara task assíncrona de processamento RAG para documento."""
+        # Apenas para tipos suportados
+        if not DocumentExtractionService.is_supported(original_mime_type):
+            return
+
+        try:
+            # Ler arquivo do MinIO para passar para a task
+            file_item = await self.file_repo.get_by_id(file_id, owner_id)
+            if not file_item:
+                return
+
+            document_bytes = await self.minio_service.get_object_bytes(file_item.minio_key)
+            if file_item.is_encrypted and file_item.encryption_nonce:
+                document_bytes = self.crypto_service.decrypt_bytes(document_bytes, file_item.encryption_nonce)
+
+            # Disparar task
+            from app.tasks.documents import extract_and_embed_document
+            extract_and_embed_document.apply_async(
+                args=[
+                    file_id,
+                    owner_id,
+                    document_bytes,
+                    original_mime_type,
+                    file_item.name,
+                ],
+                queue="documents",
+            )
+        except Exception as e:
+            # Log mas não falha o upload
+            print(f"Erro ao disparar task RAG para {file_id}: {e}")
+
+    async def process_rag_result(
+        self,
+        file_id: str,
+        owner_id: str,
+        extracted_text: str,
+        text_embedding: list[float],
+    ) -> bool:
+        """Salva resultado do processamento RAG no banco."""
+        return await self.file_repo.update_rag_data(
+            file_id=file_id,
+            owner_id=owner_id,
+            extracted_text=extracted_text,
+            text_embedding=text_embedding,
+        )
+
+    async def enqueue_image_tagging(
+        self,
+        file_id: str,
+        owner_id: str,
+        original_mime_type: str,
+    ) -> None:
+        """Dispara task assíncrona de tagging para imagem."""
+        # Apenas para tipos de imagem suportados
+        supported_image_types = {
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+        }
+        if original_mime_type not in supported_image_types:
+            return
+
+        try:
+            # Ler imagem do MinIO
+            file_item = await self.file_repo.get_by_id(file_id, owner_id)
+            if not file_item:
+                return
+
+            image_bytes = await self.minio_service.get_object_bytes(file_item.minio_key)
+            if file_item.is_encrypted and file_item.encryption_nonce:
+                image_bytes = self.crypto_service.decrypt_bytes(image_bytes, file_item.encryption_nonce)
+
+            # Disparar task
+            from app.tasks.images import generate_image_tags
+            generate_image_tags.apply_async(
+                args=[file_id, owner_id, image_bytes],
+                kwargs={
+                    "max_tags": 10,
+                    "confidence_threshold": 0.15,
+                },
+                queue="images",
+            )
+        except Exception as e:
+            # Log mas não falha o upload
+            print(f"Erro ao disparar task de tags para {file_id}: {e}")
+
+    async def process_tagging_result(
+        self,
+        file_id: str,
+        owner_id: str,
+        tags: list[dict],
+    ) -> bool:
+        """Salva resultado do tagging no banco."""
+        return await self.file_repo.update_image_tags(
+            file_id=file_id,
+            owner_id=owner_id,
+            tags=tags,
         )
