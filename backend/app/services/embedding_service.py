@@ -20,9 +20,6 @@ class EmbeddingService:
 
         Args:
             model_name: Nome do modelo HuggingFace (padrão: all-MiniLM-L6-v2, 384 dimensões)
-                        Alternativas leves:
-                        - all-MiniLM-L6-v2 (384 dim) - rápido, bom para português
-                        - multilingual-MiniLM-L12-v2 (384 dim) - multilíngue
         """
         logger.info(f"Carregando modelo {model_name}...")
         self.model = SentenceTransformer(model_name)

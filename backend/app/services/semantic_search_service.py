@@ -20,6 +20,11 @@ class SemanticSearchService:
     """Serviço para busca semântica de documentos."""
 
     SEARCH_COLLECTION = "files"
+    _STOP_WORDS = {
+        "a", "ao", "aos", "as", "com", "da", "das", "de", "do", "dos",
+        "e", "em", "na", "nas", "no", "nos", "o", "os", "ou", "para",
+        "por", "que", "se", "sem", "um", "uma", "uns", "umas"
+    }
 
     async def search(
         self,
@@ -41,11 +46,16 @@ class SemanticSearchService:
             Lista de documentos com score de similaridade
         """
         try:
+            clean_query = query.strip()
+            if not clean_query:
+                return []
+
             # 1. Gerar embedding da query
             embedding_service = get_embedding_service()
-            query_embedding = embedding_service.embed_text(query)
+            query_embedding = embedding_service.embed_text(clean_query)
+            query_terms = self._extract_query_terms(clean_query)
 
-            logger.info(f"Query embedding gerado para: {query[:50]}...")
+            logger.info(f"Query embedding gerado para: {clean_query[:50]}...")
 
             # 2. Buscar no MongoDB
             db = get_database()
@@ -60,10 +70,19 @@ class SemanticSearchService:
                     limit=limit,
                     min_similarity=min_similarity
                 )
-                logger.info(f"Vector Search: Encontrados {len(results)} documentos")
-                return results
+                filtered_results = self._post_filter_results(
+                    results=results,
+                    query_terms=query_terms,
+                    limit=limit,
+                    min_similarity=min_similarity,
+                )
+                logger.info(
+                    "Vector Search: encontrados %s, relevantes %s",
+                    len(results),
+                    len(filtered_results),
+                )
+                return filtered_results
             except Exception as vector_error:
-                # Se falhar (MongoDB local não suporta), usa fallback semântico local
                 error_msg = str(vector_error)
                 if "$search" in error_msg or "Location6047401" in error_msg:
                     logger.info("Vector Search não disponível, usando fallback semântico local")
@@ -74,8 +93,18 @@ class SemanticSearchService:
                         limit=limit,
                         min_similarity=min_similarity,
                     )
-                    logger.info(f"Fallback semântico local: {len(results)} documento(s)")
-                    return results
+                    filtered_results = self._post_filter_results(
+                        results=results,
+                        query_terms=query_terms,
+                        limit=limit,
+                        min_similarity=min_similarity,
+                    )
+                    logger.info(
+                        "Fallback semântico local: encontrados %s, relevantes %s",
+                        len(results),
+                        len(filtered_results),
+                    )
+                    return filtered_results
                 else:
                     raise
 
@@ -92,12 +121,14 @@ class SemanticSearchService:
         min_similarity: float
     ) -> List[dict]:
         """Busca usando Vector Search (MongoDB Atlas)."""
+        # Recupera candidatos extras para permitir pós-filtro de relevância.
+        candidate_k = max(limit * 4, 20)
         pipeline = [
             {
                 "$search": {
                     "cosmosSearch": {
                         "vector": query_embedding,
-                        "k": limit
+                        "k": candidate_k
                     },
                     "returnScore": True,
                     "select": [
@@ -135,6 +166,7 @@ class SemanticSearchService:
                     "extracted_text_length": len(full_text) if full_text else 0
                 })
 
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
         return results
 
     async def _embedding_search_fallback(
@@ -186,7 +218,7 @@ class SemanticSearchService:
             )
 
         results.sort(key=lambda x: x["similarity_score"], reverse=True)
-        return results[:limit]
+        return results[:max(limit * 4, 20)]
 
     @staticmethod
     def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
@@ -211,6 +243,52 @@ class SemanticSearchService:
         if file_id is None:
             file_id = doc.get("_id")
         return str(file_id)
+
+    def _extract_query_terms(self, query: str) -> list[str]:
+        """Extrai termos úteis da query para validar contexto dos resultados."""
+        tokens = []
+        for raw_token in query.lower().split():
+            token = "".join(ch for ch in raw_token if ch.isalnum())
+            if len(token) < 3:
+                continue
+            if token in self._STOP_WORDS:
+                continue
+            tokens.append(token)
+        return tokens
+
+    def _post_filter_results(
+        self,
+        results: list[dict],
+        query_terms: list[str],
+        limit: int,
+        min_similarity: float,
+    ) -> list[dict]:
+        """Filtra resultados fracos para reduzir respostas sem sentido."""
+        if not results:
+            return []
+
+        top_score = max(item.get("similarity_score", 0.0) for item in results)
+        relative_floor = max(min_similarity, top_score - 0.12)
+        semantic_only_floor = max(0.72, top_score - 0.05)
+
+        filtered: list[dict] = []
+        for item in results:
+            score = item.get("similarity_score", 0.0)
+            if score < relative_floor:
+                continue
+
+            if not query_terms:
+                filtered.append(item)
+                continue
+
+            context = f"{item.get('file_name', '')} {item.get('extracted_text_snippet', '')}".lower()
+            has_keyword_overlap = any(term in context for term in query_terms)
+
+            if has_keyword_overlap or score >= semantic_only_floor:
+                filtered.append(item)
+
+        filtered.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return filtered[:limit]
 
 
     async def create_vector_search_index(self):

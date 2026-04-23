@@ -337,7 +337,7 @@ export default function FilesPage() {
             <p className="muted">
               {uploadState.inProgress
                 ? `Enviando ${uploadState.filename}...`
-                : "Upload via backend com criptografia obrigatoria no servidor."}
+                : null}
             </p>
           </div>
           {(uploadState.inProgress || uploadState.progress > 0) && (

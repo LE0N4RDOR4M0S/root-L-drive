@@ -7,13 +7,13 @@ Responsável por:
 - Indexar no MongoDB com vector search
 """
 
-import asyncio
 import logging
 from celery import shared_task
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.services.document_extraction_service import DocumentExtractionService
 from app.services.embedding_service import get_embedding_service
+from app.tasks.async_runner import run_async
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def extract_and_embed_document(
                 text_embedding=embedding,
             )
 
-        saved = asyncio.run(_persist())
+        saved = run_async(_persist())
         if not saved:
             logger.warning(f"Falha ao salvar dados RAG para {file_id}")
             return {

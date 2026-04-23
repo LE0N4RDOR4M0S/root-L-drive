@@ -10,7 +10,7 @@ class ServerCryptoService:
     def __init__(self) -> None:
         key = base64.b64decode(settings.file_encryption_key_base64)
         if len(key) not in (16, 24, 32):
-            raise ValueError("file_encryption_key_base64 must decode to 16, 24 or 32 bytes")
+            raise ValueError("file_encryption_key_base64 é invalida")
         self._key = key
         self._aesgcm = AESGCM(self._key)
 

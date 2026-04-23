@@ -19,7 +19,6 @@ services:
       MINIO_SSE_STRICT: "false"
       FILE_ENCRYPTION_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
       CORS_ALLOW_ORIGINS: http://localhost:5173,http://frontend:5173
-    environment:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
     ports:

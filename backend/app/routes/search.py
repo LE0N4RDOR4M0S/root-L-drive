@@ -74,7 +74,7 @@ async def semantic_search(
             query=request.query,
             user_id=current_user.id,
             limit=request.limit,
-            min_similarity=0.35
+            min_similarity=0.55
         )
         
         return SemanticSearchResponse(

@@ -61,7 +61,6 @@ export default function SemanticSearchModal({ isOpen, onClose }) {
         {error && <div className="error-message">{error}</div>}
 
         <div className="search-tips">
-          <h3>💡 Dicas:</h3>
           <ul>
             <li>Use linguagem natural: "contrato de serviço"</li>
             <li>Busque por tema: "multa", "atraso", "desconto"</li>

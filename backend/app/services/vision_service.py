@@ -49,7 +49,7 @@ class VisionService:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
         logger.info(f"Carregando CLIP {model_name} em {device}...")
-        self.model, self.preprocess = open_clip.create_model_and_transforms(
+        self.model, _, self.preprocess = open_clip.create_model_and_transforms(
             model_name, device=device, precision="fp32"
         )
         self.tokenizer = open_clip.get_tokenizer(model_name)

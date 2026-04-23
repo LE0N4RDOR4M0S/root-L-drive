@@ -7,12 +7,12 @@ Responsável por:
 - Salvar tags no MongoDB
 """
 
-import asyncio
 import logging
 from celery import shared_task
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.services.vision_service import get_vision_service
+from app.tasks.async_runner import run_async
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def generate_image_tags(
                 tags=tags,
             )
 
-        saved = asyncio.run(_persist())
+        saved = run_async(_persist())
         if not saved:
             logger.warning(f"Falha ao salvar tags para {file_id}")
             return {

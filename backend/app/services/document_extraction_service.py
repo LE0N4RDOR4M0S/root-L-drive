@@ -66,16 +66,29 @@ class DocumentExtractionService:
             from PyPDF2 import PdfReader
 
             pdf_file = BytesIO(document_bytes)
-            pdf_reader = PdfReader(pdf_file)
+            pdf_reader = PdfReader(pdf_file, strict=False)
 
             text_parts = []
+            total_chars = 0
             for page_num in range(len(pdf_reader.pages)):
-                page = pdf_reader.pages[page_num]
-                text = page.extract_text()
-                if text:
-                    text_parts.append(text)
-                    if sum(len(t) for t in text_parts) > max_chars:
-                        break
+                try:
+                    page = pdf_reader.pages[page_num]
+                    text = page.extract_text()
+                except Exception as page_error:
+                    logger.warning(
+                        "Falha ao extrair página %s do PDF: %s",
+                        page_num,
+                        page_error,
+                    )
+                    continue
+
+                if not text:
+                    continue
+
+                text_parts.append(text)
+                total_chars += len(text)
+                if total_chars > max_chars:
+                    break
 
             full_text = "\n".join(text_parts)
             return full_text[:max_chars].strip() if full_text else None
@@ -104,11 +117,25 @@ class DocumentExtractionService:
             doc = Document(docx_file)
 
             text_parts = []
-            for para in doc.paragraphs:
-                if para.text.strip():
-                    text_parts.append(para.text)
-                    if sum(len(t) for t in text_parts) > max_chars:
-                        break
+            total_chars = 0
+            for para_num, para in enumerate(doc.paragraphs):
+                try:
+                    paragraph_text = para.text.strip()
+                except Exception as paragraph_error:
+                    logger.warning(
+                        "Falha ao ler parágrafo %s do DOCX: %s",
+                        para_num,
+                        paragraph_error,
+                    )
+                    continue
+
+                if not paragraph_text:
+                    continue
+
+                text_parts.append(paragraph_text)
+                total_chars += len(paragraph_text)
+                if total_chars > max_chars:
+                    break
 
             full_text = "\n".join(text_parts)
             return full_text[:max_chars].strip() if full_text else None
