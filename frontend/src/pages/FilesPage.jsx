@@ -18,6 +18,7 @@ import {
 } from "../api/files";
 import { getApiErrorMessage } from "../api/client";
 import useFolderNavigator from "../hooks/useFolderNavigator";
+import { IoEye, IoDownload, IoShareSocial, IoRemoveCircleOutline } from "react-icons/io5";
 
 export default function FilesPage() {
   const [searchParams] = useSearchParams();
@@ -235,8 +236,8 @@ export default function FilesPage() {
   const handlePreview = async (file) => {
     try {
       setStatus("Preparando preview...");
-      const { blob } = await downloadFile(file.id);
-      const previewObjectUrl = URL.createObjectURL(blob);
+      const previewObjectUrl = URL.createObjectURL((await downloadFile(file.id)).blob);
+
       setPreviewFile(file);
       setPreviewUrl(previewObjectUrl);
       setStatus("");
@@ -372,7 +373,7 @@ export default function FilesPage() {
       </section>
 
       {activeView === "active" ? (
-      <section className="grid">
+      <section className="grid folders-grid">
         <article className="card">
           <h3>Pastas</h3>
           <ul className="list">
@@ -411,17 +412,17 @@ export default function FilesPage() {
                   </div>
                 </div>
                 <div className="row-actions">
-                  <button className="ghost" onClick={() => handlePreview(file)}>
-                    Visualizar
+                  <button className="ghost icon-only" onClick={() => handlePreview(file)}>
+                    <IoEye aria-hidden="true" />
                   </button>
-                  <button className="ghost" onClick={() => handleDownload(file)}>
-                    Baixar
+                  <button className="ghost icon-only" onClick={() => handleDownload(file)}>
+                    <IoDownload aria-hidden="true" />
                   </button>
-                  <button className="ghost" onClick={() => openShareModal(file)}>
-                    Compartilhar
+                  <button className="ghost icon-only" onClick={() => openShareModal(file)}>
+                    <IoShareSocial aria-hidden="true" />
                   </button>
-                  <button className="danger" onClick={() => setDeleteTarget(file)}>
-                    Excluir
+                  <button className="danger icon-only" onClick={() => setDeleteTarget(file)}>
+                    <IoRemoveCircleOutline aria-hidden="true" />
                   </button>
                 </div>
               </li>

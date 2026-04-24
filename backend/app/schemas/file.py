@@ -53,6 +53,13 @@ class RequestDownloadUrlResponse(BaseModel):
     filename: str
 
 
+class RequestPreviewProxyUrlResponse(BaseModel):
+    preview_url: str
+    google_url: str
+    expires_in: int
+    filename: str
+
+
 class CompleteUploadRequest(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     folder_id: str | None = None

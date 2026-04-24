@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     cors_allow_origins: str = "http://localhost:5173,http://localhost:3000"
     frontend_public_url: str = "http://localhost:5173"
+    backend_public_url: str = "http://localhost:8000"
 
     # Celery / Task Queue
     celery_broker_url: str = "redis://redis:6379/0"

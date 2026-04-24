@@ -266,7 +266,17 @@ export default function AppHeader() {
           </button>
 
           {isNotifOpen ? (
-            <div className="notif-dropdown" role="dialog" aria-label="Notificações">
+            <div
+              className="notif-dropdown"
+              role="dialog"
+              aria-label="Notificações"
+              style={{
+                maxHeight: "min(60vh, 420px)",
+                overflowY: "auto",
+                width: "min(360px, calc(100vw - 24px))",
+                boxSizing: "border-box",
+              }}
+            >
               <div className="notif-head">
                 <strong>Notificações</strong>
                 <div className="notif-head-actions">

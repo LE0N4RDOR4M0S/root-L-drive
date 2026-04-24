@@ -36,6 +36,7 @@ API docs: http://localhost:8000/docs
 - `TRASH_RETENTION_DAYS`
 - `TRASH_CLEANUP_INTERVAL_SECONDS`
 - `FRONTEND_PUBLIC_URL`
+- `BACKEND_PUBLIC_URL`
 
 ## Upload e criptografia
 
@@ -54,6 +55,9 @@ Download/preview:
 
 - `GET /api/v1/files/{file_id}/download`
 - Backend lê do MinIO, decripta e devolve conteúdo em claro para o cliente autenticado.
+- `GET /api/v1/files/{file_id}/preview-proxy-url`
+- `GET /api/v1/public/previews/{token}`
+- Backend emite uma URL pública temporária assinada para visualização em viewers externos, como o Google.
 
 Compartilhamento público:
 

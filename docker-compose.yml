@@ -19,10 +19,38 @@ services:
       MINIO_SSE_STRICT: "false"
       FILE_ENCRYPTION_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
       CORS_ALLOW_ORIGINS: http://localhost:5173,http://frontend:5173
+      BACKEND_PUBLIC_URL: http://localhost:8000
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
     ports:
       - "8000:8000"
+    depends_on:
+      - mongo
+      - minio
+      - redis
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: private-drive-celery-worker
+    command: celery -A app.celery_app worker --loglevel=info --pool=solo --queues=documents,images,default
+    environment:
+      JWT_SECRET_KEY: super-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: 1440
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB_NAME: private_drive
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_SECURE: "false"
+      MINIO_BUCKET_NAME: private-drive
+      MINIO_FORCE_SSE: "false"
+      MINIO_SSE_STRICT: "false"
+      FILE_ENCRYPTION_KEY_BASE64: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     depends_on:
       - mongo
       - minio

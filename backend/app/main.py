@@ -12,6 +12,7 @@ from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
 from app.routes.folders import router as folders_router
 from app.routes.notifications import router as notifications_router
+from app.routes.public_preview_proxy import router as public_preview_proxy_router
 from app.routes.profile import router as profile_router
 from app.routes.public_shares import router as public_shares_router
 from app.routes.search import router as search_router
@@ -86,6 +87,7 @@ app.include_router(files_router, prefix=settings.api_prefix)
 app.include_router(search_router, prefix=settings.api_prefix)
 app.include_router(notifications_router, prefix=settings.api_prefix)
 app.include_router(profile_router, prefix=settings.api_prefix)
+app.include_router(public_preview_proxy_router, prefix=settings.api_prefix)
 app.include_router(shares_router, prefix=settings.api_prefix)
 app.include_router(public_shares_router, prefix=settings.api_prefix)
 app.include_router(processing_router, prefix=settings.api_prefix)
