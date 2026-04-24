@@ -1,10 +1,11 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { BsDeviceHddFill, BsFillFolderFill, BsFileEarmarkFill } from "react-icons/bs";
+import { FaHardDrive } from "react-icons/fa6";
 import { clearAuth } from "../api/client";
 import AppHeader from "../components/AppHeader";
 
 const menuItems = [
-  { to: "/", label: "Visão Geral", end: true, icon: BsDeviceHddFill },
+  { to: "/", label: "Visão Geral", end: true, icon: FaHardDrive },
   { to: "/folders", label: "Pastas", icon: BsFillFolderFill },
   { to: "/files", label: "Arquivos", icon: BsFileEarmarkFill },
 ];

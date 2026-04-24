@@ -168,9 +168,21 @@ export default function AppHeader() {
     }
   };
 
+  const handleSearchBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsSearchOpen(false);
+    }
+  };
+
+  const handleNotifBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsNotifOpen(false);
+    }
+  };
+
   return (
     <header className="app-header card">
-      <form className="header-search" onSubmit={handleSearch}>
+      <form className="header-search" onSubmit={handleSearch} onBlur={handleSearchBlur}>
         <span className="header-search-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="presentation" focusable="false">
             <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -217,10 +229,8 @@ export default function AppHeader() {
         >
           <span aria-hidden="true" className="icon-wrap">
             <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-              {/* Lupa com símbolo de IA */}
               <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.8" />
               <path d="M13 13l6 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              {/* Estrela/AI symbol */}
               <path d="M15 8l1 3h3l-2 2 1 3-3-2-3 2 1-3-2-2h3z" fill="currentColor" opacity="0.4" />
             </svg>
           </span>
@@ -231,7 +241,7 @@ export default function AppHeader() {
           onClose={() => setIsSemanticSearchOpen(false)}
         />
 
-        <div className={`notif-panel ${isNotifOpen ? "open" : ""}`}>
+        <div className={`notif-panel ${isNotifOpen ? "open" : ""}`} onBlur={handleNotifBlur}>
           <button
             type="button"
             className="icon-btn"
