@@ -15,7 +15,9 @@ const overviewMenuItem = {
   ],
 };
 
-const menuItems = [overviewMenuItem, { to: "/favorites", label: "Favoritos", icon: FaStar }, { to: "/trash", label: "Lixeira", icon: FaTrash }];
+const menuItems = [overviewMenuItem,
+  { to: "/favorites", label: "Favoritos", icon: FaStar },
+  { to: "/trash", label: "Lixeira", icon: FaTrash }];
 
 const integrationItems = [
   { to: "/integrations/apikeys", label: "API Keys", icon: FaKey },

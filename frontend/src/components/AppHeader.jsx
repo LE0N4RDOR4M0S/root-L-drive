@@ -18,6 +18,7 @@ const pathLabels = {
   "/folders": "Pastas",
   "/files": "Arquivos",
   "/favorites": "Favoritos",
+  "/trash": "Lixeira",
   //"/machines": "Máquinas",
 };
 
