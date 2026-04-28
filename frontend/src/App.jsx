@@ -5,6 +5,7 @@ import FilesPage from "./pages/FilesPage";
 import FoldersPage from "./pages/FoldersPage";
 import LoginPage from "./pages/LoginPage";
 import OverviewPage from "./pages/OverviewPage";
+import FavoritesPage from "./pages/FavoritesPage";
 import PublicSharePage from "./pages/PublicSharePage";
 import SemanticSearchResultsPage from "./pages/SemanticSearchResultsPage";
 
@@ -32,6 +33,7 @@ export default function App() {
         <Route index element={<OverviewPage />} />
         <Route path="folders" element={<FoldersPage />} />
         <Route path="files" element={<FilesPage />} />
+        <Route path="favorites" element={<FavoritesPage />} />
         <Route path="search-results" element={<SemanticSearchResultsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

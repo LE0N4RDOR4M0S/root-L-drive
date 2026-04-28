@@ -5,7 +5,9 @@ import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
 import FolderTreeView from "../components/FolderTreeView";
 import { createFolder, deleteFolder, listFolders } from "../api/folders";
+import { setFolderFavorite } from "../api/favorites";
 import useFolderNavigator from "../hooks/useFolderNavigator";
+import { FaRegStar, FaStar } from "react-icons/fa6";
 
 async function buildFolderTree(parentId = null, path = []) {
   const folders = await listFolders(parentId);
@@ -104,6 +106,19 @@ export default function FoldersPage() {
     }
   };
 
+  const handleToggleFavorite = async (folder) => {
+    try {
+      const updated = await setFolderFavorite(folder.id, !folder.is_favorite);
+      await Promise.all([
+        loadCurrentFolders(currentFolderId),
+        loadTree(),
+      ]);
+      setStatus(updated.is_favorite ? "Pasta adicionada aos favoritos." : "Pasta removida dos favoritos.");
+    } catch {
+      setStatus("Nao foi possivel atualizar os favoritos da pasta.");
+    }
+  };
+
   const handleTreeSelect = async (folderPath) => {
     try {
       await goToFolderPath(folderPath);
@@ -164,9 +179,19 @@ export default function FoldersPage() {
                 <button className="link" onClick={() => openFolder(folder)}>
                   {folder.name}
                 </button>
-                <button className="danger" onClick={() => requestDelete(folder)}>
-                  Excluir
-                </button>
+                <div className="row-actions">
+                  <button
+                    className="ghost icon-only"
+                    onClick={() => handleToggleFavorite(folder)}
+                    title={folder.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                    aria-label={folder.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  >
+                    {folder.is_favorite ? <FaStar aria-hidden="true" /> : <FaRegStar aria-hidden="true" />}
+                  </button>
+                  <button className="danger" onClick={() => requestDelete(folder)}>
+                    Excluir
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

@@ -18,6 +18,7 @@ class MongoFolderRepository(FolderRepository):
             "owner_id": owner_id,
             "parent_id": parent_id,
             "created_at": now,
+            "is_favorite": False,
         }
         result = await self.collection.insert_one(doc)
         doc["_id"] = result.inserted_id
@@ -62,3 +63,22 @@ class MongoFolderRepository(FolderRepository):
             return False
         result = await self.collection.delete_one({"_id": as_object_id(folder_id), "owner_id": owner_id})
         return result.deleted_count == 1
+
+    async def set_favorite(self, folder_id: str, owner_id: str, is_favorite: bool) -> bool:
+        if not is_valid_object_id(folder_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": as_object_id(folder_id), "owner_id": owner_id},
+            {"$set": {"is_favorite": is_favorite}},
+        )
+        return result.modified_count == 1
+
+    async def list_favorites_by_owner(self, owner_id: str, limit: int = 200) -> list[Folder]:
+        safe_limit = max(1, min(limit, 1000))
+        cursor = (
+            self.collection.find({"owner_id": owner_id, "is_favorite": True})
+            .sort("created_at", -1)
+            .limit(safe_limit)
+        )
+        docs = await cursor.to_list(length=safe_limit)
+        return [folder_from_mongo(doc) for doc in docs]

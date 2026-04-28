@@ -195,6 +195,23 @@ class FileService:
             entity_id=file_item.id,
         )
 
+    async def set_file_favorite(self, owner_id: str, file_id: str, is_favorite: bool) -> FileEntity:
+        file_item = await self.file_repo.get_by_id(file_id, owner_id)
+        if file_item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+        updated = await self.file_repo.set_favorite(file_id=file_id, owner_id=owner_id, is_favorite=is_favorite)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+        refreshed = await self.file_repo.get_by_id(file_id, owner_id)
+        if refreshed is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+        return refreshed
+
+    async def list_favorites(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
+        return await self.file_repo.list_favorites_by_owner(owner_id=owner_id, limit=limit)
+
     async def list_trash_files(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
         return await self.file_repo.list_deleted_by_owner(owner_id=owner_id, limit=limit)
 

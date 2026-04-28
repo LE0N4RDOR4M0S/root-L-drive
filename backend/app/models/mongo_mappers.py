@@ -28,6 +28,7 @@ def folder_from_mongo(doc: dict) -> Folder:
         owner_id=doc["owner_id"],
         parent_id=doc.get("parent_id"),
         created_at=doc["created_at"],
+        is_favorite=doc.get("is_favorite", False),
     )
 
 
@@ -54,6 +55,7 @@ def file_from_mongo(doc: dict) -> FileEntity:
         # Image tagging fields
         tags=doc.get("tags", []),
         tags_processed_at=doc.get("tags_processed_at"),
+        is_favorite=doc.get("is_favorite", False),
     )
 
 

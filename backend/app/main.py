@@ -11,6 +11,7 @@ from app.repositories.mongo_file_repository import MongoFileRepository
 from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
 from app.routes.folders import router as folders_router
+from app.routes.favorites import router as favorites_router
 from app.routes.notifications import router as notifications_router
 from app.routes.public_preview_proxy import router as public_preview_proxy_router
 from app.routes.profile import router as profile_router
@@ -34,8 +35,10 @@ async def lifespan(_: FastAPI):
 		await db["users"].create_index([("email", 1)], unique=True)
 		await db["users"].create_index([("full_name", 1)])
 		await db["folders"].create_index([("owner_id", 1), ("parent_id", 1)])
+		await db["folders"].create_index([("owner_id", 1), ("is_favorite", 1)])
 		await db["folders"].create_index([("owner_id", 1), ("name", 1)])
 		await db["files"].create_index([("owner_id", 1), ("folder_id", 1)])
+		await db["files"].create_index([("owner_id", 1), ("is_favorite", 1)])
 		await db["files"].create_index([("owner_id", 1), ("name", 1)])
 		await db["files"].create_index([("deleted_at", 1)])
 		await db["notifications"].create_index([("owner_id", 1), ("created_at", -1)])
@@ -84,6 +87,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(folders_router, prefix=settings.api_prefix)
 app.include_router(files_router, prefix=settings.api_prefix)
+app.include_router(favorites_router, prefix=settings.api_prefix)
 app.include_router(search_router, prefix=settings.api_prefix)
 app.include_router(notifications_router, prefix=settings.api_prefix)
 app.include_router(profile_router, prefix=settings.api_prefix)

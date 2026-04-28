@@ -26,3 +26,4 @@ class FileEntity:
     # Auto-tagging de imagens
     tags: List[dict] = field(default_factory=list)  # [{"name": "praia", "confidence": 0.95}]
     tags_processed_at: datetime | None = None
+    is_favorite: bool = False

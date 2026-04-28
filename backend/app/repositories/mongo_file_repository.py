@@ -38,6 +38,7 @@ class MongoFileRepository(FileRepository):
             "encryption_nonce": encryption_nonce,
             "created_at": now,
             "deleted_at": None,
+            "is_favorite": False,
         }
         result = await self.collection.insert_one(doc)
         doc["_id"] = result.inserted_id
@@ -92,6 +93,15 @@ class MongoFileRepository(FileRepository):
         )
         return result.modified_count == 1
 
+    async def set_favorite(self, file_id: str, owner_id: str, is_favorite: bool) -> bool:
+        if not is_valid_object_id(file_id):
+            return False
+        result = await self.collection.update_one(
+            {"_id": as_object_id(file_id), "owner_id": owner_id, "deleted_at": None},
+            {"$set": {"is_favorite": is_favorite}},
+        )
+        return result.modified_count == 1
+
     async def list_deleted_before(self, cutoff: datetime, limit: int = 200) -> list[FileEntity]:
         safe_limit = max(1, min(limit, 1000))
         cursor = (
@@ -134,6 +144,16 @@ class MongoFileRepository(FileRepository):
             {"$set": {"deleted_at": None}},
         )
         return result.modified_count == 1
+
+    async def list_favorites_by_owner(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
+        safe_limit = max(1, min(limit, 1000))
+        cursor = (
+            self.collection.find({"owner_id": owner_id, "deleted_at": None, "is_favorite": True})
+            .sort("created_at", -1)
+            .limit(safe_limit)
+        )
+        docs = await cursor.to_list(length=safe_limit)
+        return [file_from_mongo(doc) for doc in docs]
 
     # RAG (Busca Semântica) methods
     async def update_rag_data(

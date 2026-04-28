@@ -9,3 +9,4 @@ class Folder:
     owner_id: str
     parent_id: str | None
     created_at: datetime
+    is_favorite: bool = False

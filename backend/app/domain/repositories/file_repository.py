@@ -42,6 +42,10 @@ class FileRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def set_favorite(self, file_id: str, owner_id: str, is_favorite: bool) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     async def list_deleted_before(self, cutoff: datetime, limit: int = 200) -> list[FileEntity]:
         raise NotImplementedError
 
@@ -59,4 +63,8 @@ class FileRepository(ABC):
 
     @abstractmethod
     async def restore(self, file_id: str, owner_id: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_favorites_by_owner(self, owner_id: str, limit: int = 200) -> list[FileEntity]:
         raise NotImplementedError

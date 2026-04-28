@@ -11,6 +11,7 @@ from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_folder_repository import MongoFolderRepository
 from app.repositories.mongo_notification_repository import MongoNotificationRepository
+from app.schemas.favorite import SetFavoriteRequest
 from app.schemas.file import (
     CompleteUploadRequest,
     FileResponse,
@@ -103,6 +104,32 @@ async def list_files(folder_id: str | None = None, current_user=Depends(get_curr
         )
         for item in files
     ]
+
+
+@router.patch("/{file_id}/favorite", response_model=FileResponse)
+async def set_file_favorite(file_id: str, payload: SetFavoriteRequest, current_user=Depends(get_current_user)):
+    service = get_file_service()
+    file_item = await service.set_file_favorite(owner_id=current_user.id, file_id=file_id, is_favorite=payload.is_favorite)
+    return FileResponse(
+        id=file_item.id,
+        name=file_item.name,
+        owner_id=file_item.owner_id,
+        folder_id=file_item.folder_id,
+        minio_key=file_item.minio_key,
+        size=file_item.size,
+        mime_type=file_item.mime_type,
+        original_mime_type=file_item.original_mime_type,
+        is_encrypted=file_item.is_encrypted,
+        encryption_algorithm=file_item.encryption_algorithm,
+        encryption_nonce=file_item.encryption_nonce,
+        created_at=file_item.created_at,
+        deleted_at=file_item.deleted_at,
+        tags=file_item.tags,
+        is_indexed_for_search=file_item.is_indexed_for_search,
+        tags_processed_at=file_item.tags_processed_at,
+        rag_processed_at=file_item.rag_processed_at,
+        is_favorite=file_item.is_favorite,
+    )
 
 
 @router.get("/trash", response_model=list[FileResponse])

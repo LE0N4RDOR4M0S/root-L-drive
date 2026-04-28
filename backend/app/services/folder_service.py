@@ -65,3 +65,20 @@ class FolderService:
             entity_type="folder",
             entity_id=folder.id,
         )
+
+    async def set_folder_favorite(self, owner_id: str, folder_id: str, is_favorite: bool) -> Folder:
+        folder = await self.folder_repo.get_by_id(folder_id, owner_id)
+        if folder is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+
+        updated = await self.folder_repo.set_favorite(folder_id=folder_id, owner_id=owner_id, is_favorite=is_favorite)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+
+        refreshed = await self.folder_repo.get_by_id(folder_id, owner_id)
+        if refreshed is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Folder not found")
+        return refreshed
+
+    async def list_favorites(self, owner_id: str, limit: int = 200) -> list[Folder]:
+        return await self.folder_repo.list_favorites_by_owner(owner_id=owner_id, limit=limit)

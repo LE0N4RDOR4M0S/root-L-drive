@@ -17,6 +17,8 @@ const pathLabels = {
   "/": "Visão Geral",
   "/folders": "Pastas",
   "/files": "Arquivos",
+  "/favorites": "Favoritos",
+  //"/machines": "Máquinas",
 };
 
 export default function AppHeader() {
@@ -180,6 +182,12 @@ export default function AppHeader() {
     }
   };
 
+  const handleProfileBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsProfileOpen(false);
+    }
+  };
+
   return (
     <header className="app-header card">
       <form className="header-search" onSubmit={handleSearch} onBlur={handleSearchBlur}>
@@ -322,6 +330,7 @@ export default function AppHeader() {
           aria-label="Abrir perfil"
           aria-expanded={isProfileOpen}
           onClick={() => setIsProfileOpen((current) => !current)}
+          onBlur={handleProfileBlur}
         >
           <span className="profile-avatar" aria-hidden="true">
             {profileInitial}

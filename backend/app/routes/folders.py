@@ -5,6 +5,7 @@ from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
 from app.repositories.mongo_folder_repository import MongoFolderRepository
 from app.repositories.mongo_notification_repository import MongoNotificationRepository
+from app.schemas.favorite import SetFavoriteRequest
 from app.schemas.folder import CreateFolderRequest, FolderResponse
 from app.services.folder_service import FolderService
 
@@ -51,6 +52,20 @@ async def list_folders(parent_id: str | None = None, current_user=Depends(get_cu
         )
         for item in folders
     ]
+
+
+@router.patch("/{folder_id}/favorite", response_model=FolderResponse)
+async def set_folder_favorite(folder_id: str, payload: SetFavoriteRequest, current_user=Depends(get_current_user)):
+    service = get_folder_service()
+    folder = await service.set_folder_favorite(owner_id=current_user.id, folder_id=folder_id, is_favorite=payload.is_favorite)
+    return FolderResponse(
+        id=folder.id,
+        name=folder.name,
+        owner_id=folder.owner_id,
+        parent_id=folder.parent_id,
+        created_at=folder.created_at,
+        is_favorite=folder.is_favorite,
+    )
 
 
 @router.delete("/{folder_id}", status_code=status.HTTP_204_NO_CONTENT)

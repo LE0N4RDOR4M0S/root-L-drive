@@ -27,3 +27,11 @@ class FolderRepository(ABC):
     @abstractmethod
     async def delete(self, folder_id: str, owner_id: str) -> bool:
         raise NotImplementedError
+
+    @abstractmethod
+    async def set_favorite(self, folder_id: str, owner_id: str, is_favorite: bool) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_favorites_by_owner(self, owner_id: str, limit: int = 200) -> list[Folder]:
+        raise NotImplementedError

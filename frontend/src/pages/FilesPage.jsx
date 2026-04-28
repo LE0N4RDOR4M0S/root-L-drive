@@ -6,6 +6,7 @@ import ConfirmModal from "../components/ConfirmModal";
 import FolderBreadcrumbs from "../components/FolderBreadcrumbs";
 import FilePreviewModal from "../components/FilePreviewModal";
 import TagBadges from "../components/TagBadges";
+import { setFileFavorite } from "../api/favorites";
 import {
   createFileShareLink,
   deleteFile,
@@ -18,6 +19,7 @@ import {
 } from "../api/files";
 import { getApiErrorMessage } from "../api/client";
 import useFolderNavigator from "../hooks/useFolderNavigator";
+import { FaRegStar, FaStar } from "react-icons/fa6";
 import { IoEye, IoDownload, IoShareSocial, IoRemoveCircleOutline } from "react-icons/io5";
 
 export default function FilesPage() {
@@ -212,6 +214,16 @@ export default function FilesPage() {
     }
   };
 
+  const handleToggleFavorite = async (file) => {
+    try {
+      const updated = await setFileFavorite(file.id, !file.is_favorite);
+      await loadCurrentFiles(currentFolderId);
+      setStatus(updated.is_favorite ? "Arquivo adicionado aos favoritos." : "Arquivo removido dos favoritos.");
+    } catch {
+      setStatus("Nao foi possivel atualizar os favoritos do arquivo.");
+    }
+  };
+
   const handleDownload = async (file) => {
     try {
       setStatus("Preparando download...");
@@ -328,7 +340,6 @@ export default function FilesPage() {
           <h3>Upload de arquivo</h3>
         </div>
         <div className="upload-stack">
-          <p className="muted">Criptografia no servidor ativada para todos os uploads.</p>
           <div
             {...getRootProps()}
             className={`dropzone ${isDragActive ? "drag-active" : ""} ${uploadState.inProgress ? "disabled" : ""}`}
@@ -412,6 +423,14 @@ export default function FilesPage() {
                   </div>
                 </div>
                 <div className="row-actions">
+                  <button
+                    className="ghost icon-only"
+                    onClick={() => handleToggleFavorite(file)}
+                    title={file.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                    aria-label={file.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                  >
+                    {file.is_favorite ? <FaStar aria-hidden="true" /> : <FaRegStar aria-hidden="true" />}
+                  </button>
                   <button className="ghost icon-only" onClick={() => handlePreview(file)}>
                     <IoEye aria-hidden="true" />
                   </button>

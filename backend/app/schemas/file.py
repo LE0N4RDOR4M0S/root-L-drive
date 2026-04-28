@@ -87,3 +87,4 @@ class FileResponse(BaseModel):
     is_indexed_for_search: bool = Field(False, description="Se está indexado para RAG")
     tags_processed_at: Optional[datetime] = Field(None, description="Quando tags foram geradas")
     rag_processed_at: Optional[datetime] = Field(None, description="Quando foi processado para RAG")
+    is_favorite: bool = Field(False, description="Se o arquivo está marcado como favorito")
