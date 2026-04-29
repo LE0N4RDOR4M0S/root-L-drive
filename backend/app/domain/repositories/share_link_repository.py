@@ -19,3 +19,7 @@ class ShareLinkRepository(ABC):
     @abstractmethod
     async def get_by_token(self, token: str) -> ShareLinkEntity | None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def list_by_owner(self, owner_id: str, limit: int = 200) -> list[ShareLinkEntity]:
+        raise NotImplementedError

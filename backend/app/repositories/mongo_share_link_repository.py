@@ -32,3 +32,9 @@ class MongoShareLinkRepository(ShareLinkRepository):
     async def get_by_token(self, token: str) -> ShareLinkEntity | None:
         doc = await self.collection.find_one({"token": token})
         return share_link_from_mongo(doc) if doc else None
+
+    async def list_by_owner(self, owner_id: str, limit: int = 200) -> list[ShareLinkEntity]:
+        safe_limit = max(1, min(limit, 1000))
+        cursor = self.collection.find({"owner_id": owner_id}).sort("created_at", -1).limit(safe_limit)
+        docs = await cursor.to_list(length=safe_limit)
+        return [share_link_from_mongo(doc) for doc in docs]

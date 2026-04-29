@@ -4,8 +4,9 @@ from app.core.config import settings
 from app.core.dependencies import get_current_user
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
+from app.repositories.mongo_folder_repository import MongoFolderRepository
 from app.repositories.mongo_share_link_repository import MongoShareLinkRepository
-from app.schemas.share import CreateShareLinkRequest, CreateShareLinkResponse
+from app.schemas.share import CreateShareLinkRequest, CreateShareLinkResponse, ShareLinkListItemResponse
 from app.services.server_crypto_service import ServerCryptoService
 from app.services.minio_service import MinioService
 from app.services.share_service import ShareService
@@ -18,6 +19,7 @@ def get_share_service() -> ShareService:
     db = get_database()
     return ShareService(
         file_repo=MongoFileRepository(db),
+        folder_repo=MongoFolderRepository(db),
         share_repo=MongoShareLinkRepository(db),
         minio_service=MinioService(),
         crypto_service=ServerCryptoService(),
@@ -35,3 +37,10 @@ async def create_file_share_link(file_id: str, payload: CreateShareLinkRequest, 
         password=payload.password,
     )
     return CreateShareLinkResponse(**result)
+
+
+@router.get("", response_model=list[ShareLinkListItemResponse])
+async def list_share_links(current_user=Depends(get_current_user), limit: int = 200):
+    service = get_share_service()
+    items = await service.list_file_share_links(owner_id=current_user.id, limit=limit)
+    return [ShareLinkListItemResponse(**item) for item in items]

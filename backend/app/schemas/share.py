@@ -15,6 +15,22 @@ class CreateShareLinkResponse(BaseModel):
     has_password: bool
 
 
+class ShareLinkListItemResponse(BaseModel):
+    id: str
+    token: str
+    file_id: str
+    file_name: str
+    folder_id: str | None
+    folder_name: str | None = None
+    owner_id: str
+    public_url: str
+    expires_at: datetime | None
+    created_at: datetime
+    has_password: bool
+    is_active: bool
+    file_exists: bool = True
+
+
 class ShareLinkPublicInfoResponse(BaseModel):
     filename: str
     mime_type: str

@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 
 from app.core.security import hash_password, verify_password
 from app.domain.repositories.file_repository import FileRepository
+from app.domain.repositories.folder_repository import FolderRepository
 from app.domain.repositories.share_link_repository import ShareLinkRepository
 from app.services.server_crypto_service import ServerCryptoService
 from app.services.stream_utils import InMemoryObjectStream
@@ -15,12 +16,14 @@ class ShareService:
     def __init__(
         self,
         file_repo: FileRepository,
+        folder_repo: FolderRepository,
         share_repo: ShareLinkRepository,
         minio_service: MinioService,
         crypto_service: ServerCryptoService,
         public_base_url: str,
     ) -> None:
         self.file_repo = file_repo
+        self.folder_repo = folder_repo
         self.share_repo = share_repo
         self.minio_service = minio_service
         self.crypto_service = crypto_service
@@ -58,6 +61,46 @@ class ShareService:
             "expires_at": share_link.expires_at,
             "has_password": bool(share_link.password_hash),
         }
+
+    async def list_file_share_links(self, owner_id: str, limit: int = 200) -> list[dict]:
+        share_links = await self.share_repo.list_by_owner(owner_id=owner_id, limit=limit)
+        items: list[dict] = []
+
+        for share_link in share_links:
+            file_item = await self.file_repo.get_by_id(file_id=share_link.file_id, owner_id=share_link.owner_id)
+            file_exists = file_item is not None
+            folder_name = None
+            folder_id = file_item.folder_id if file_item is not None else None
+
+            if file_item is None:
+                file_item = await self.file_repo.get_deleted_by_id(file_id=share_link.file_id, owner_id=share_link.owner_id)
+
+            file_name = file_item.name if file_item is not None else "Arquivo não encontrado"
+            if file_item is not None and file_item.folder_id:
+                folder_id = file_item.folder_id
+                folder = await self.folder_repo.get_by_id(file_item.folder_id, share_link.owner_id)
+                folder_name = folder.name if folder is not None else None
+            is_active = self._is_share_active(share_link.expires_at)
+
+            items.append(
+                {
+                    "id": share_link.id,
+                    "token": share_link.token,
+                    "file_id": share_link.file_id,
+                    "file_name": file_name,
+                    "folder_id": folder_id,
+                    "folder_name": folder_name,
+                    "owner_id": share_link.owner_id,
+                    "public_url": f"{self.public_base_url}/share/{share_link.token}",
+                    "expires_at": share_link.expires_at,
+                    "created_at": share_link.created_at,
+                    "has_password": bool(share_link.password_hash),
+                    "is_active": is_active,
+                    "file_exists": file_exists,
+                }
+            )
+
+        return items
 
     async def get_public_share_info(self, token: str) -> dict:
         share_link, file_item = await self._load_valid_share_and_file(token)
@@ -113,3 +156,9 @@ class ShareService:
         if value.tzinfo is None:
             return value.replace(tzinfo=timezone.utc)
         return value.astimezone(timezone.utc)
+
+    def _is_share_active(self, expires_at: datetime | None) -> bool:
+        normalized = self._to_utc_aware(expires_at)
+        if normalized is None:
+            return True
+        return normalized > datetime.now(timezone.utc)

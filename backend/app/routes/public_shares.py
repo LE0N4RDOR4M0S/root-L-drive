@@ -7,6 +7,7 @@ from starlette.responses import StreamingResponse
 from app.core.config import settings
 from app.db.mongodb import get_database
 from app.repositories.mongo_file_repository import MongoFileRepository
+from app.repositories.mongo_folder_repository import MongoFolderRepository
 from app.repositories.mongo_share_link_repository import MongoShareLinkRepository
 from app.schemas.share import ShareLinkDownloadRequest, ShareLinkPublicInfoResponse
 from app.services.server_crypto_service import ServerCryptoService
@@ -21,6 +22,7 @@ def get_public_share_service() -> ShareService:
     db = get_database()
     return ShareService(
         file_repo=MongoFileRepository(db),
+        folder_repo=MongoFolderRepository(db),
         share_repo=MongoShareLinkRepository(db),
         minio_service=MinioService(),
         crypto_service=ServerCryptoService(),
