@@ -54,10 +54,15 @@ export default function FilesPage() {
     filename: "",
     progress: 0,
   });
+  const [focusedFileId, setFocusedFileId] = useState("");
 
   const searchTerm = useMemo(() => {
     return (searchParams.get("search") || "").trim().toLowerCase();
   }, [searchParams]);
+
+  const referencedFolderId = useMemo(() => (searchParams.get("folder_id") || "").trim() || null, [searchParams]);
+  const referencedFolderName = useMemo(() => (searchParams.get("folder_name") || "").trim() || null, [searchParams]);
+  const referencedFileId = useMemo(() => (searchParams.get("file_id") || "").trim() || null, [searchParams]);
 
   const visibleFiles = useMemo(() => {
     if (!searchTerm) {
@@ -81,18 +86,26 @@ export default function FilesPage() {
 
   useEffect(() => {
     async function bootstrap() {
-      await goToRoot();
-      await loadCurrentFiles(null);
+      if (referencedFolderId) {
+        await openFolder({ id: referencedFolderId, name: referencedFolderName || "Pasta referenciada" });
+        await loadCurrentFiles(referencedFolderId);
+        setFocusedFileId(referencedFileId || "");
+      } else {
+        await goToRoot();
+        await loadCurrentFiles(null);
+        setFocusedFileId(referencedFileId || "");
+      }
       await loadTrashFiles();
     }
 
     bootstrap().catch(() => setStatus("Erro ao carregar dados de arquivos."));
-  }, [goToRoot]);
+  }, [goToRoot, openFolder, referencedFileId, referencedFolderId, referencedFolderName]);
 
   const handleOpenFolder = async (folder) => {
     try {
       await openFolder(folder);
       await loadCurrentFiles(folder.id);
+      setFocusedFileId("");
     } catch {
       setStatus("Nao foi possivel abrir a pasta.");
     }
@@ -102,6 +115,7 @@ export default function FilesPage() {
     try {
       await goToRoot();
       await loadCurrentFiles(null);
+      setFocusedFileId("");
     } catch {
       setStatus("Nao foi possivel voltar para a raiz.");
     }
@@ -113,6 +127,7 @@ export default function FilesPage() {
       const targetId = targetPath[targetPath.length - 1]?.id || null;
       await goToPathIndex(index);
       await loadCurrentFiles(targetId);
+      setFocusedFileId("");
     } catch {
       setStatus("Nao foi possivel navegar no caminho.");
     }
@@ -374,12 +389,6 @@ export default function FilesPage() {
           >
             Arquivos Ativos
           </button>
-          <button
-            className={activeView === "trash" ? "primary" : "ghost"}
-            onClick={() => setActiveView("trash")}
-          >
-            Lixeira ({trashFiles.length})
-          </button>
         </div>
       </section>
 
@@ -406,7 +415,7 @@ export default function FilesPage() {
               <li>{searchTerm ? "Nenhum arquivo encontrado para a busca." : "Nenhum arquivo neste nivel."}</li>
             )}
             {visibleFiles.map((file) => (
-              <li key={file.id}>
+              <li key={file.id} className={file.id === focusedFileId ? "focused-row" : ""}>
                 <div className="file-item">
                   <div className="file-info">
                     <span className="file-name">
@@ -450,6 +459,7 @@ export default function FilesPage() {
         </article>
       </section>
       ) : (
+      {/* view de lixeira - desabilitado
       <section className="card">
         <h3>Lixeira</h3>
         <p className="muted">Arquivos removidos sao excluidos automaticamente apos 30 dias.</p>
@@ -471,7 +481,7 @@ export default function FilesPage() {
             </li>
           ))}
         </ul>
-      </section>
+      </section>*/}
       )}
 
       <ConfirmModal

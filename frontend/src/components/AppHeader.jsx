@@ -19,7 +19,9 @@ const pathLabels = {
   "/files": "Arquivos",
   "/favorites": "Favoritos",
   "/trash": "Lixeira",
-  //"/machines": "Máquinas",
+  "/tools/shared": "Links Compartilhados",
+  "/integrations/apikeys": "API Keys",
+  "/integrations/machines": "Máquinas",
 };
 
 export default function AppHeader() {
