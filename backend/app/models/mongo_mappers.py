@@ -1,4 +1,5 @@
 from app.domain.entities.file import FileEntity
+from app.domain.entities.api_key import ApiKeyEntity
 from app.domain.entities.folder import Folder
 from app.domain.entities.notification import NotificationEntity
 from app.domain.entities.share_link import ShareLinkEntity
@@ -82,4 +83,21 @@ def share_link_from_mongo(doc: dict) -> ShareLinkEntity:
         password_hash=doc.get("password_hash"),
         expires_at=doc.get("expires_at"),
         created_at=doc["created_at"],
+    )
+
+
+def api_key_from_mongo(doc: dict) -> ApiKeyEntity:
+    return ApiKeyEntity(
+        id=str(doc["_id"]),
+        owner_id=doc["owner_id"],
+        name=doc["name"],
+        scopes=doc.get("scopes", []),
+        key_hash=doc["key_hash"],
+        key_prefix=doc.get("key_prefix", ""),
+        key_last4=doc.get("key_last4", ""),
+        created_at=doc["created_at"],
+        last_used_at=doc.get("last_used_at"),
+        expires_at=doc.get("expires_at"),
+        revoked_at=doc.get("revoked_at"),
+        is_active=doc.get("is_active", True),
     )

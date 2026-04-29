@@ -1,4 +1,4 @@
-import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsbDrive } from "react-icons/fa6";
+import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsb } from "react-icons/fa6";
 
 const machines = [
   {
@@ -92,7 +92,7 @@ export default function MachinesPage() {
             </div>
 
             <div className="proto-agent-line">
-              <FaUsbDrive aria-hidden="true" />
+              <FaUsb aria-hidden="true" />
               <div>
                 <strong>Pastas autorizadas</strong>
                 <p className="muted">Seleção explícita de diretórios permitidos para acesso remoto.</p>

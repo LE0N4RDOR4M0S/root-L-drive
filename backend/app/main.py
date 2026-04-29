@@ -12,6 +12,7 @@ from app.routes.auth import router as auth_router
 from app.routes.files import router as files_router
 from app.routes.folders import router as folders_router
 from app.routes.favorites import router as favorites_router
+from app.routes.api_keys import router as api_keys_router
 from app.routes.notifications import router as notifications_router
 from app.routes.public_preview_proxy import router as public_preview_proxy_router
 from app.routes.profile import router as profile_router
@@ -46,6 +47,9 @@ async def lifespan(_: FastAPI):
 		await db["share_links"].create_index([("token", 1)], unique=True)
 		await db["share_links"].create_index([("owner_id", 1), ("file_id", 1)])
 		await db["share_links"].create_index([("expires_at", 1)])
+		await db["api_keys"].create_index([("owner_id", 1), ("created_at", -1)])
+		await db["api_keys"].create_index([("key_hash", 1)], unique=True)
+		await db["api_keys"].create_index([("owner_id", 1), ("is_active", 1)])
 		print("MongoDB indices criados com sucesso")
 	except Exception as e:
 		print(f"Erro ao criar índices no MongoDB: {e}")
@@ -88,6 +92,7 @@ app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(folders_router, prefix=settings.api_prefix)
 app.include_router(files_router, prefix=settings.api_prefix)
 app.include_router(favorites_router, prefix=settings.api_prefix)
+app.include_router(api_keys_router, prefix=settings.api_prefix)
 app.include_router(search_router, prefix=settings.api_prefix)
 app.include_router(notifications_router, prefix=settings.api_prefix)
 app.include_router(profile_router, prefix=settings.api_prefix)
