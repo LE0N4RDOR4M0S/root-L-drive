@@ -131,10 +131,6 @@ export default function ApiKeysPage() {
           </p>
         </div>
         <div className="proto-hero-actions">
-          <div className="proto-hero-badge">
-            <FaShieldHalved aria-hidden="true" />
-            <span>Chaves, escopos e revogação</span>
-          </div>
           <button type="button" className="ghost info-btn" onClick={() => setDocsOpen(true)} aria-label="Abrir documentação">
             <FaCircleInfo aria-hidden="true" />
             Docs

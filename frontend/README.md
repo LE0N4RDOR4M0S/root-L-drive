@@ -1,6 +1,6 @@
 # Frontend (React + Vite)
 
-Aplicação web para autenticação, navegação de pastas, upload/download de arquivos, preview, lixeira e compartilhamento por link público.
+Aplicação web para autenticação, navegação de pastas, upload/download de arquivos, preview, lixeira, compartilhamento por link público, gestão de API Keys e navegação remota de máquinas/agentes locais.
 
 ## Tecnologias
 
@@ -9,6 +9,17 @@ Aplicação web para autenticação, navegação de pastas, upload/download de a
 - Axios
 - React Dropzone
 - Vite
+
+## Escopo técnico
+
+O frontend é a camada de apresentação do produto e concentra:
+
+- login e registro com JWT
+- navegação de arquivos e pastas
+- upload/download e preview de arquivos
+- telas de integrações para API Keys e máquinas
+- modal de navegação remota de diretórios via agente local
+- consumo da API REST e do canal WebSocket do backend
 
 ## Execução local
 
@@ -55,6 +66,27 @@ Variável principal (`.env`):
 
 - Gera link com expiração opcional e senha opcional
 - Página pública: rota `/share/:token`
+
+### API Keys
+
+- Tela de listagem, criação e revogação de chaves
+- Exibe o valor secreto apenas na criação
+- Modal de documentação com exemplos de uso em header `X-API-Key`
+
+### Máquinas e agentes locais
+
+- Tela de listagem, criação e revogação de máquinas
+- Geração e download do script Python do agente
+- Modal de navegação de diretórios com abertura de subpastas
+- Comandos enviados ao backend via `POST /api/v1/machines/{machine_id}/command`
+- O modal mostra nome da máquina, caminho atual e navegação por itens
+
+### Especificações de implementação
+
+- API client centralizado em `src/api`
+- Integrações usam o mesmo token JWT do usuário autenticado
+- O modal de máquinas depende do retorno do comando `list` com `request_id`
+- O caminho exibido no browser remoto é o caminho resolvido pelo agente, não apenas o texto enviado pela UI
 
 ## Estrutura resumida
 

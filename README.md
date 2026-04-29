@@ -1,6 +1,6 @@
 # Private Driver
 
-Sistema de armazenamento de arquivos com autenticação, organização por pastas, lixeira, compartilhamento público, criptografia obrigatória no backend e uma camada assíncrona de IA para indexação semântica e auto-tagging de imagens.
+Sistema de armazenamento de arquivos com autenticação, organização por pastas, lixeira, compartilhamento público, criptografia obrigatória no backend, uma camada assíncrona de IA para indexação semântica e auto-tagging de imagens, além de integrações por API Keys e agentes locais para máquinas.
 
 ## Stack
 
@@ -10,6 +10,7 @@ Sistema de armazenamento de arquivos com autenticação, organização por pasta
 - Storage: MinIO (S3 compatível)
 - Fila assíncrona: Celery + Redis
 - IA (RAG/Visão): SentenceTransformers + CLIP
+- Integrações: API Keys e agentes locais por WebSocket
 - Infra local: Docker Compose
 
 ## Como subir
@@ -93,6 +94,9 @@ npm run dev
 - Busca semântica de documentos (RAG)
 - Auto-tagging de imagens com score de confiança
 - Processamento assíncrono de documentos e imagens via Celery
+- API Keys para integração externa por header `X-API-Key`
+- Cadastro e gestão de máquinas/agentes locais com WebSocket
+- Navegação remota de diretórios na UI de máquinas
 
 ## Nova camada de IA (RAG + Visão)
 
@@ -111,6 +115,21 @@ npm run dev
 3. Persistência de tags e confiança no arquivo
 4. Exibição de badges na interface
 
+### Fluxo de integração por API Keys
+
+1. Usuário cria uma chave na interface de integrações.
+2. O backend armazena apenas o hash da chave e metadados da emissão.
+3. A autenticação passa a aceitar `X-API-Key` além de JWT.
+4. A chave pode expirar ou ser revogada a qualquer momento.
+
+### Fluxo de máquinas/agentes locais
+
+1. Usuário cria uma máquina e recebe um token único.
+2. O backend gera um script Python de instalação do agente.
+3. O agente conecta ao backend por WebSocket usando `machine_id` + token.
+4. A UI envia comandos para a máquina conectada e recebe resposta por `request_id`.
+5. O modal de navegação permite abrir pastas e explorar subdiretórios remotamente.
+
 ### Observação sobre MongoDB local
 
 - MongoDB local não suporta `$search` do Atlas.
@@ -121,6 +140,13 @@ npm run dev
 
 - `POST /api/v1/search/semantic`: busca semântica em documentos indexados
 - `GET /api/v1/search`: busca global por nome/metadados
+- `GET /api/v1/api-keys`: lista chaves da conta autenticada
+- `POST /api/v1/api-keys`: cria uma nova API Key
+- `PATCH /api/v1/api-keys/{api_key_id}/revoke`: revoga uma API Key
+- `GET /api/v1/machines`: lista máquinas/agentes cadastrados
+- `POST /api/v1/machines`: cria máquina e gera script de instalação do agente
+- `POST /api/v1/machines/{machine_id}/command`: envia comando para agente online
+- `GET /api/v1/machines/ws/{machine_id}`: WebSocket do agente local
 
 ## Segurança (estado atual)
 
@@ -135,6 +161,9 @@ npm run dev
 - Redis ativo para enfileirar processamento assíncrono
 - Worker Celery ativo para executar tasks de RAG e tagging
 - Sem worker, upload funciona, mas indexação/tags não são processadas
+- Backend precisa de MongoDB para persistência de máquinas, API Keys e metadados
+- O agente local precisa de conectividade HTTP/WebSocket até o backend
+- O script de máquina usa Tkinter para seleção de diretórios quando disponível
 
 ## Estrutura do projeto
 
