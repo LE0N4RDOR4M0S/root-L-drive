@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+<<<<<<< HEAD
 import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsb, FaSquarePlus, FaTrash, FaFolder, FaFile, FaChevronRight, FaDownload } from "react-icons/fa6";
+=======
+import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsb, FaSquarePlus, FaTrash, FaFolder, FaFile, FaChevronRight } from "react-icons/fa6";
+>>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
 
 import { listMachines, createMachine, revokeMachine, sendMachineCommand } from "../../api/machines";
 
@@ -18,6 +22,7 @@ export default function MachinesPage() {
   const [pathHistory, setPathHistory] = useState([]);
   const [isBrowsingLoading, setIsBrowsingLoading] = useState(false);
 
+<<<<<<< HEAD
   const browsingMachineInfo = useMemo(
     () => machines.find((machine) => machine.id === browsingMachine) || null,
     [machines, browsingMachine],
@@ -50,6 +55,8 @@ export default function MachinesPage() {
     window.URL.revokeObjectURL(url);
   };
 
+=======
+>>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
   const load = async () => {
     try {
       setLoading(true);
@@ -114,6 +121,7 @@ export default function MachinesPage() {
   };
 
   const handleOpenFolder = (itemName) => {
+<<<<<<< HEAD
     const nextPath = joinRemotePath(currentPath, itemName);
     loadDirectoryItems(browsingMachine, nextPath);
   };
@@ -142,6 +150,14 @@ export default function MachinesPage() {
     }
   };
 
+=======
+    const nextPath = currentPath.endsWith("\\") || currentPath.endsWith("/")
+      ? currentPath + itemName
+      : currentPath + "\\" + itemName;
+    loadDirectoryItems(browsingMachine, nextPath);
+  };
+
+>>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
   const handleGoBack = () => {
     if (pathHistory.length > 1) {
       const newHistory = pathHistory.slice(0, -1);
@@ -276,7 +292,11 @@ export default function MachinesPage() {
             padding: 0,
           }}>
             <div style={{ padding: "20px", borderBottom: "1px solid var(--color-border)" }}>
+<<<<<<< HEAD
               <h3>{browsingMachineInfo?.name || "Navegador"}</h3>
+=======
+              <h3>{machines.find(m => m.id === browsingMachine)?.name || "Navegador"}</h3>
+>>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
               <p className="muted" style={{ fontSize: "0.9em", marginTop: "8px" }}>{currentPath}</p>
             </div>
 
@@ -316,6 +336,7 @@ export default function MachinesPage() {
                           <FaFile style={{ marginRight: "12px", color: "var(--color-muted)" }} />
                         )}
                         <span style={{ flex: 1 }}>{item}</span>
+<<<<<<< HEAD
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           {!isDir && (
                             <button
@@ -330,6 +351,9 @@ export default function MachinesPage() {
                           )}
                           {isDir && <FaChevronRight style={{ color: "var(--color-muted)", fontSize: "0.8em" }} />}
                         </div>
+=======
+                        {isDir && <FaChevronRight style={{ color: "var(--color-muted)", fontSize: "0.8em" }} />}
+>>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
                       </li>
                     );
                   })}
