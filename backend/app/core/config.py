@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
@@ -10,8 +11,14 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
 
-    mongodb_uri: str = "mongodb://mongo:27017"
+    # MongoDB connection
+    mongodb_uri: str = ""
+    mongodb_host: str = "mongo"
+    mongodb_port: int = 27017
+    mongodb_username: str = ""
+    mongodb_password: str = ""
     mongodb_db_name: str = "private_drive"
+    mongodb_auth_source: str = "admin"
 
     minio_endpoint: str = "minio:9000"
     minio_access_key: str = "minioadmin"
@@ -48,6 +55,20 @@ class Settings(BaseSettings):
         env_file = ".env.local" if Path(".env.local").exists() else ".env"
         self.model_config["env_file"] = env_file
         super().__init__(**data)
+        
+        # Monta a URI do MongoDB com credenciais escapadas se não foi fornecida explicitamente
+        if not self.mongodb_uri:
+            if self.mongodb_username and self.mongodb_password:
+                # Escapa username e password para RFC 3986
+                escaped_user = quote_plus(self.mongodb_username)
+                escaped_pass = quote_plus(self.mongodb_password)
+                self.mongodb_uri = (
+                    f"mongodb://{escaped_user}:{escaped_pass}@{self.mongodb_host}:{self.mongodb_port}"
+                    f"/{self.mongodb_db_name}?authSource={self.mongodb_auth_source}"
+                )
+            else:
+                # Sem autenticação
+                self.mongodb_uri = f"mongodb://{self.mongodb_host}:{self.mongodb_port}"
 
 
 settings = Settings()
