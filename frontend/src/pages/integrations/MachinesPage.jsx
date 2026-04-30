@@ -292,11 +292,7 @@ export default function MachinesPage() {
             padding: 0,
           }}>
             <div style={{ padding: "20px", borderBottom: "1px solid var(--color-border)" }}>
-<<<<<<< HEAD
               <h3>{browsingMachineInfo?.name || "Navegador"}</h3>
-=======
-              <h3>{machines.find(m => m.id === browsingMachine)?.name || "Navegador"}</h3>
->>>>>>> 53f8f1ed431d53e9df3ae1fdf45d03152992f979
               <p className="muted" style={{ fontSize: "0.9em", marginTop: "8px" }}>{currentPath}</p>
             </div>
 
