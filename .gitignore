@@ -12,6 +12,8 @@ node_modules/
 build/
 .env
 .env.local
+.env.prod
+.env.prod.local
 .env.development.local
 .env.test.local
 .env.production.local

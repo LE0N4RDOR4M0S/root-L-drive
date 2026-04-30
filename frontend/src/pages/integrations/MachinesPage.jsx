@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsb, FaSquarePlus, FaTrash, FaFolder, FaFile, FaChevronRight } from "react-icons/fa6";
+import { FaCircleNodes, FaComputer, FaFolderOpen, FaServer, FaUsb, FaSquarePlus, FaTrash, FaFolder, FaFile, FaChevronRight, FaDownload } from "react-icons/fa6";
 
 import { listMachines, createMachine, revokeMachine, sendMachineCommand } from "../../api/machines";
 
@@ -17,6 +17,38 @@ export default function MachinesPage() {
   const [items, setItems] = useState([]);
   const [pathHistory, setPathHistory] = useState([]);
   const [isBrowsingLoading, setIsBrowsingLoading] = useState(false);
+
+  const browsingMachineInfo = useMemo(
+    () => machines.find((machine) => machine.id === browsingMachine) || null,
+    [machines, browsingMachine],
+  );
+
+  const joinRemotePath = (basePath, childName) => {
+    if (!basePath) return childName;
+    if (basePath.endsWith("\\") || basePath.endsWith("/")) return `${basePath}${childName}`;
+    return `${basePath}\\${childName}`;
+  };
+
+  const base64ToBlob = (base64, mimeType = "application/octet-stream") => {
+    const binaryString = window.atob(base64);
+    const length = binaryString.length;
+    const bytes = new Uint8Array(length);
+    for (let index = 0; index < length; index += 1) {
+      bytes[index] = binaryString.charCodeAt(index);
+    }
+    return new Blob([bytes], { type: mimeType });
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
 
   const load = async () => {
     try {
@@ -82,10 +114,32 @@ export default function MachinesPage() {
   };
 
   const handleOpenFolder = (itemName) => {
-    const nextPath = currentPath.endsWith("\\") || currentPath.endsWith("/")
-      ? currentPath + itemName
-      : currentPath + "\\" + itemName;
+    const nextPath = joinRemotePath(currentPath, itemName);
     loadDirectoryItems(browsingMachine, nextPath);
+  };
+
+  const handleDownloadFile = async (itemName) => {
+    try {
+      const path = joinRemotePath(currentPath, itemName);
+      setIsBrowsingLoading(true);
+      const resp = await sendMachineCommand(browsingMachine, {
+        cmd: "read",
+        path,
+        max_bytes: 50 * 1024 * 1024,
+      });
+
+      if (resp.ok && resp.result?.data_b64) {
+        const blob = base64ToBlob(resp.result.data_b64);
+        downloadBlob(blob, itemName);
+        setStatus(`Download iniciado: ${itemName}`);
+      } else {
+        setStatus(`Erro ao baixar: ${resp.error || "resposta inválida"}`);
+      }
+    } catch (e) {
+      setStatus("Falha ao baixar arquivo");
+    } finally {
+      setIsBrowsingLoading(false);
+    }
   };
 
   const handleGoBack = () => {
@@ -222,7 +276,7 @@ export default function MachinesPage() {
             padding: 0,
           }}>
             <div style={{ padding: "20px", borderBottom: "1px solid var(--color-border)" }}>
-              <h3>{machines.find(m => m.id === browsingMachine)?.name || "Navegador"}</h3>
+              <h3>{browsingMachineInfo?.name || "Navegador"}</h3>
               <p className="muted" style={{ fontSize: "0.9em", marginTop: "8px" }}>{currentPath}</p>
             </div>
 
@@ -262,7 +316,20 @@ export default function MachinesPage() {
                           <FaFile style={{ marginRight: "12px", color: "var(--color-muted)" }} />
                         )}
                         <span style={{ flex: 1 }}>{item}</span>
-                        {isDir && <FaChevronRight style={{ color: "var(--color-muted)", fontSize: "0.8em" }} />}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          {!isDir && (
+                            <button
+                              className="ghost"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDownloadFile(item);
+                              }}
+                            >
+                              <FaDownload aria-hidden="true" /> Baixar
+                            </button>
+                          )}
+                          {isDir && <FaChevronRight style={{ color: "var(--color-muted)", fontSize: "0.8em" }} />}
+                        </div>
                       </li>
                     );
                   })}
