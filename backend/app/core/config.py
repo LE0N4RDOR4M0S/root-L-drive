@@ -1,44 +1,45 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
     app_name: str = "Root L Drive"
-    app_version: str = "0.1.0"
+    app_version: str = "1.0.0"
     api_prefix: str = "/api/v1"
 
-    jwt_secret_key: str = "change-me-in-production"
-    jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 60 * 24
+    jwt_secret_key: str = Field("change-me-in-production", env=("JWT_SECRET_KEY",))
+    jwt_algorithm: str = Field("HS256", env=("JWT_ALGORITHM",))
+    jwt_expire_minutes: int = Field(60 * 24, env=("JWT_EXPIRE_MINUTES",))
 
     # MongoDB connection
-    mongodb_uri: str = ""
-    mongodb_host: str = "mongo"
-    mongodb_port: int = 27017
-    mongodb_username: str = ""
-    mongodb_password: str = ""
-    mongodb_db_name: str = "private_drive"
-    mongodb_auth_source: str = "admin"
+    mongodb_uri: str = Field("", env=("MONGODB_URI",))
+    mongodb_host: str = Field("mongo", env=("MONGODB_HOST", "MONGO_HOST"))
+    mongodb_port: int = Field(27017, env=("MONGODB_PORT",))
+    mongodb_username: str = Field("", env=("MONGODB_USERNAME", "MONGO_INITDB_ROOT_USERNAME",))
+    mongodb_password: str = Field("", env=("MONGODB_PASSWORD", "MONGO_INITDB_ROOT_PASSWORD",))
+    mongodb_db_name: str = Field("private_drive", env=("MONGODB_DB_NAME", "MONGODB_DB",))
+    mongodb_auth_source: str = Field("admin", env=("MONGODB_AUTH_SOURCE",))
 
-    minio_endpoint: str = "minio:9000"
-    minio_access_key: str = "minioadmin"
-    minio_secret_key: str = "minioadmin"
-    minio_secure: bool = False
-    minio_bucket_name: str = "private-drive"
-    minio_force_sse: bool = False
-    minio_sse_strict: bool = False
-    file_encryption_key_base64: str = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+    minio_endpoint: str = Field("minio:9000", env=("MINIO_ENDPOINT",))
+    minio_access_key: str = Field("minioadmin", env=("MINIO_ACCESS_KEY", "MINIO_ROOT_USER"))
+    minio_secret_key: str = Field("minioadmin", env=("MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD"))
+    minio_secure: bool = Field(False, env=("MINIO_SECURE",))
+    minio_bucket_name: str = Field("private-drive", env=("MINIO_BUCKET_NAME",))
+    minio_force_sse: bool = Field(False, env=("MINIO_FORCE_SSE",))
+    minio_sse_strict: bool = Field(False, env=("MINIO_SSE_STRICT",))
+    file_encryption_key_base64: str = Field("MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=", env=("FILE_ENCRYPTION_KEY_BASE64",))
 
     trash_retention_days: int = 30
     trash_cleanup_interval_seconds: int = 3600
 
-    cors_allow_origins: str = "http://localhost:5173,http://localhost:3000"
-    frontend_public_url: str = "http://localhost:5173"
-    backend_public_url: str = "http://localhost:8000"
+    cors_allow_origins: str = Field("http://localhost:5173,http://localhost:3000", env=("CORS_ALLOW_ORIGINS",))
+    frontend_public_url: str = Field("http://localhost:5173", env=("FRONTEND_PUBLIC_URL", "VITE_API_BASE_URL"))
+    backend_public_url: str = Field("http://localhost:8000", env=("BACKEND_PUBLIC_URL",))
 
     # Celery / Task Queue
-    celery_broker_url: str = "redis://redis:6379/0"
-    celery_result_backend: str = "redis://redis:6379/1"
+    celery_broker_url: str = Field("redis://redis:6379/0", env=("CELERY_BROKER_URL",))
+    celery_result_backend: str = Field("redis://redis:6379/1", env=("CELERY_RESULT_BACKEND",))
 
     # ML Models
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
