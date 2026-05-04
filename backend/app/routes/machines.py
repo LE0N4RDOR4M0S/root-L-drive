@@ -80,7 +80,7 @@ async def create_machine(payload: CreateMachineRequest, current_user=Depends(get
         expires_in_days=payload.expires_in_days,
     )
     # generate a one-file installer script embedding token and config
-    backend_url = settings.backend_public_url or settings.backend_url if hasattr(settings, "backend_url") else "http://localhost:8000"
+    backend_url = settings.backend_public_url
     backend_ws_base = backend_url.rstrip('/')
     if backend_ws_base.startswith("https://"):
         backend_ws_base = "wss://" + backend_ws_base[len("https://"):]
